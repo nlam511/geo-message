@@ -1,0 +1,20 @@
+# Ignore Environment File
+**/.env
+
+# Ignore Python venv
+**/venv/
+
+# Environment variables
+backend/.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# IDE settings
+.vscode/
+.idea/
+
+# Node/Flutter (future frontend)
+frontend/node_modules/
+frontend/build/

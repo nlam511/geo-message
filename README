@@ -3,34 +3,33 @@ To start the server run
 
 
 To Install Postgres
-- brew install postgresql
+-- brew install postgresql
+
 
 Start Postgres server locally (Only need to do this once?):
-- brew services start postgresql
+-- brew services start postgresql
 
 
 VENV Commands
-- deactivate
-- which python
-- pip install [package_name]
-- pip list
-- pip freeze > requirements.txt
-- pip install -r requirements.txt
+-- deactivate
+-- which python
+-- pip install [package_name]
+-- pip list
+-- pip freeze > requirements.txt
+-- pip install -r requirements.txt
 
 
 Postgres Server Commands
-- brew services stop postgresql  # Stop PostgreSQL from running
-- brew services restart postgresql  # Restart the service
-
+-- brew services stop postgresql  # Stop PostgreSQL from running
+-- brew services restart postgresql  # Restart the service
 
 
 Psql Commands
 
-psql geo_message - connects to database
-\dt   -- list tables
+psql geo_message -- connects to database
+\dt  -- list tables
 \d messages  -- describe table
 \q = exits the psql
-
 
 
 Open docs
@@ -38,4 +37,10 @@ http://127.0.0.1:8000/docs
 
 
 Reload the db:
-python -m app.db
+python -m app.
+
+
+TODOS:
+-- Spacial Index or Index latitude/longitude with PostGIS
+-- Message Expiry
+-- Auth stuff :(

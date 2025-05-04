@@ -35,6 +35,9 @@
         }
       ]
     ],
+    "extra": {
+      "backendUrl": "http://10.0.0.72:8000"
+    },
     "experiments": {
       "typedRoutes": true
     }

@@ -1,12 +1,58 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import * as Location from 'expo-location';
+import Constants from 'expo-constants';
 
 export default function HomeScreen() {
   const [message, setMessage] = useState('');
 
-  const handleDropMessage = () => {
-    Alert.alert('Drop Message Pressed', `Message: ${message}`);
-    // We'll hook this up to your backend in Step 2
+  const handleDropMessage = async () => {
+    if (!message.trim()) {
+        Alert.alert("Enter a message before dropping!");
+        return;
+    }
+    // 1. Ask for location permission
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    console.log("🔐 Location permission status:", status);
+    if (status !== 'granted') {
+        Alert.alert('Permission denied', 'We need location permission to drop a message.');
+        return;
+    }
+
+      // 2. Get current location
+    const curr_location = await Location.getCurrentPositionAsync({});
+    const { latitude, longitude } = curr_location.coords;
+     console.log("📍 Location:", latitude, longitude);
+
+    // 3. Send POST to backend
+    try {
+      const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+      console.log("🌐 Sending request to:", backendUrl);
+      const response = await fetch(`${backendUrl}/message/drop`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          text: message,
+          latitude: latitude.toString(),
+          longitude: longitude.toString(),
+        }).toString(),
+      });
+
+      const data = await response.json();
+      console.log("📬 Response:", response.status, data);
+
+      if (response.ok) {
+        Alert.alert('✅ Message dropped!');
+        setMessage('');
+       } else {
+        Alert.alert('❌ Failed to drop message', data.detail || 'Unknown error');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('❌ Error', 'Could not connect to the server.');
+    }
   };
 
   return (

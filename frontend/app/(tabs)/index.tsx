@@ -8,21 +8,21 @@ export default function HomeScreen() {
 
   const handleDropMessage = async () => {
     if (!message.trim()) {
-        Alert.alert("Enter a message before dropping!");
-        return;
+      Alert.alert("Enter a message before dropping!");
+      return;
     }
     // 1. Ask for location permission
     const { status } = await Location.requestForegroundPermissionsAsync();
     console.log("🔐 Location permission status:", status);
     if (status !== 'granted') {
-        Alert.alert('Permission denied', 'We need location permission to drop a message.');
-        return;
+      Alert.alert('Permission denied', 'We need location permission to drop a message.');
+      return;
     }
 
-      // 2. Get current location
+    // 2. Get current location
     const curr_location = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = curr_location.coords;
-     console.log("📍 Location:", latitude, longitude);
+    console.log("📍 Location:", latitude, longitude);
 
     // 3. Send POST to backend
     try {
@@ -31,13 +31,13 @@ export default function HomeScreen() {
       const response = await fetch(`${backendUrl}/message/drop`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
+        body: JSON.stringify({
           text: message,
-          latitude: latitude.toString(),
-          longitude: longitude.toString(),
-        }).toString(),
+          latitude,
+          longitude,
+        }),
       });
 
       const data = await response.json();
@@ -46,7 +46,7 @@ export default function HomeScreen() {
       if (response.ok) {
         Alert.alert('✅ Message dropped!');
         setMessage('');
-       } else {
+      } else {
         Alert.alert('❌ Failed to drop message', data.detail || 'Unknown error');
       }
     } catch (error) {
@@ -64,9 +64,9 @@ export default function HomeScreen() {
         value={message}
         onChangeText={setMessage}
       />
-  <TouchableOpacity style={styles.customButton} onPress={handleDropMessage}>
-  <Text style={styles.buttonText}>Drop Message</Text>
-</TouchableOpacity>
+      <TouchableOpacity style={styles.customButton} onPress={handleDropMessage}>
+        <Text style={styles.buttonText}>Drop Message</Text>
+      </TouchableOpacity>
     </View>
   );
 }

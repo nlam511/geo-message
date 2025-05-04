@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.db_session import get_db
 from app.models import Message
@@ -8,12 +9,17 @@ from app.utils.geo import calculate_distance
 router = APIRouter(prefix="/message", tags=["Messages"])
 
 
+class MessageInput(BaseModel):
+    text: str
+    latitude: float
+    longitude: float 
+
 @router.post("/drop")
-def drop_message(text: str, latitude: float, longitude: float, db: Session = Depends(get_db)):
+def drop_message(payload: MessageInput, db: Session = Depends(get_db)):
     new_message = Message(
-        text=text,
-        latitude=latitude,
-        longitude=longitude,
+        text=payload.text,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
         created_at=datetime.utcnow()
     )
     db.add(new_message)

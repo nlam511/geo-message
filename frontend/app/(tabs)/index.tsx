@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Keyboard, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 
@@ -46,6 +46,7 @@ export default function HomeScreen() {
       if (response.ok) {
         Alert.alert('✅ Message dropped!');
         setMessage('');
+        Keyboard.dismiss();
       } else {
         Alert.alert('❌ Failed to drop message', data.detail || 'Unknown error');
       }
@@ -56,18 +57,26 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Drop a Geo-Message</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Type your message..."
-        value={message}
-        onChangeText={setMessage}
-      />
-      <TouchableOpacity style={styles.customButton} onPress={handleDropMessage}>
-        <Text style={styles.buttonText}>Drop Message</Text>
-      </TouchableOpacity>
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+      >
+        <View style={styles.container}>
+          <Text style={styles.title}>Drop a Geo-Message</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Type your message..."
+            value={message}
+            onChangeText={setMessage}
+          />
+          <TouchableOpacity style={styles.customButton} onPress={handleDropMessage}>
+            <Text style={styles.buttonText}>Drop Message</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 

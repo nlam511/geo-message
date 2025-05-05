@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db_session import get_db
 from app.models import User
-from app.utils.auth import hash_password
-from app.schemas import UserCreate
+from app.utils.auth import hash_password, verify_password, create_access_token
+from app.schemas import UserCreate, LoginRequest
 
 import uuid
 
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register")
-def drop_message(payload: UserCreate, db: Session = Depends(get_db)):
+def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     # Check to see if User Already Exists
     existing_user = db.query(User).filter(User.email == payload.email).first()
     if existing_user:
@@ -34,4 +34,23 @@ def drop_message(payload: UserCreate, db: Session = Depends(get_db)):
         "id": str(new_user.id),
         "email": new_user.email,
         "message": "User registered successfully"
+    }
+
+
+@router.post("/login")
+def login(payload: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user or not verify_password(payload.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+
+    token = create_access_token(data={"sub": str(user.id)})
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": str(user.id),
+        "email": user.email
     }

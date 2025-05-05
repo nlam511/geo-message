@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Keyboard, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 
 export default function HomeScreen() {
   const [message, setMessage] = useState('');
@@ -19,6 +20,15 @@ export default function HomeScreen() {
       return;
     }
 
+
+    // 🔐 Get the token from secure storage
+    const token = await SecureStore.getItemAsync("user_token");
+    if (!token) {
+      Alert.alert("❌ You must be logged in to drop a message.");
+      return;
+    }
+
+
     // 2. Get current location
     const curr_location = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = curr_location.coords;
@@ -32,6 +42,7 @@ export default function HomeScreen() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           text: message,

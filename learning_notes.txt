@@ -1,0 +1,5 @@
+- _layout.tsx is a wrapper componennt for all the screens inside the same folder.  controls the navigation flow?
+- useEffect is a react hook that run side effects?
+- useState - 
+- useRouter -
+- Side effects happen after mounting

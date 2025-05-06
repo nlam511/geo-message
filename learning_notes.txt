@@ -2,4 +2,5 @@
 - useEffect is a react hook that run side effects?
 - useState - 
 - useRouter -
-- Side effects happen after mounting
+- Mounting is the first render
+- A screen (or component) renders when: its own useState/useReducer changes, its parent rerender and pass new props, context value is subscribes to changes, a use effect indirectly triggefrs a state update.

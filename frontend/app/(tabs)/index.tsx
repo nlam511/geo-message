@@ -12,6 +12,7 @@ export default function HomeScreen() {
       Alert.alert("Enter a message before dropping!");
       return;
     }
+    console.log("Message:", message);
     // 1. Ask for location permission
     const { status } = await Location.requestForegroundPermissionsAsync();
     console.log("🔐 Location permission status:", status);

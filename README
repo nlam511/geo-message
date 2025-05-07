@@ -37,10 +37,17 @@ http://127.0.0.1:8000/docs
 
 
 Reload the db:
-python -m app.
+python -m app.db
 
 
 TODOS:
+-- Map View
+-- Refresh Token
+-- Message Collection
 -- Spacial Index or Index latitude/longitude with PostGIS
 -- Message Expiry
--- Auth stuff :(
+-- Friends List
+-- Achievements
+-- Different type of messages
+-- Subscription Model
+-- loading screen

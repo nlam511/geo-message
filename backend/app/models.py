@@ -9,26 +9,6 @@ import uuid
 
 Base = declarative_base()
 
-class Message(Base):
-    __tablename__ = "messages"
-
-    # Primary key
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True, nullable=False, unique=True)
-
-    # Foreign key relationship to User
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    owner = relationship("User", backref="messages")
-
-    # Main content
-    text = Column(String, nullable=False)
-    latitude = Column(Float, nullable=False)
-    longitude = Column(Float, nullable=False)
-    location = Column(Geography(geometry_type='POINT', srid=4326), nullable=False)
-    test = Column(String)
-    # Timestamp
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-
 class User(Base):
     __tablename__ = "users"
     
@@ -38,3 +18,49 @@ class User(Base):
     # Main content
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+
+    
+    # Relationships
+    # One-to-many: A user can drop many messages
+    messages = relationship("Message", back_populates="owner")
+    # Many-to-many (via CollectedMessage): A user can collect many messages
+    collected_messages = relationship("CollectedMessage", back_populates="user")
+
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    # Primary key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True, nullable=False, unique=True)
+
+    # Foreign key relationship to User
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+
+    # Main content
+    text = Column(String, nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    location = Column(Geography(geometry_type='POINT', srid=4326), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    # Many-to-one: Each message belongs to one user (its "owner")
+    owner = relationship("User", back_populates="messages")
+    # Many-to-many (via CollectedMessage): A message can be collected by many users
+    collected_by = relationship("CollectedMessage", back_populates="message")
+
+
+class CollectedMessage(Base):
+    __tablename__ = "collected_messages"
+
+    # Primary Keys
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
+    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"), primary_key=True)
+
+    collected_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    # Link back to the user who collected the message
+    user = relationship("User", back_populates="collected_messages")
+    # Link back to the message that was collected
+    message = relationship("Message", back_populates="collected_by")

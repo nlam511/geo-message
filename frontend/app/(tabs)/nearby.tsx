@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, Image } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
@@ -64,22 +65,31 @@ export default function NearbyScreen() {
 
     console.log("🚨 Messages:", JSON.stringify(messages, null, 2));
 
+
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>📍 Nearby Messages</Text>
-            <FlatList
-                data={messages}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <View style={styles.messageBox}>
-                        <Text style={styles.messageText}>{item.text}</Text>
-                        <Text style={styles.meta}>📍 Lat: {item.latitude}, Lng: {item.longitude}</Text>
-                    </View>
-                )}
-                ListEmptyComponent={<Text style={styles.empty}>No messages nearby.</Text>}
-            />
-        </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+            <View style={styles.topHalf}>
+                <Image
+                    source={require('../../assets/images/map-placeholder.png')}
+                    style={styles.mapImage}
+                />
+            </View>
+            <View style={styles.bottomHalf}>
+                <FlatList
+                    data={messages}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <View style={styles.messageBox}>
+                            <Text style={styles.messageText}>{item.text}</Text>
+                            <Text style={styles.meta}>📍 Lat: {item.latitude}, Lng: {item.longitude}</Text>
+                        </View>
+                    )}
+                    ListEmptyComponent={<Text style={styles.empty}>No messages nearby.</Text>}
+                />
+            </View>
+        </SafeAreaView>
     );
+
 }
 
 const styles = StyleSheet.create({
@@ -117,4 +127,22 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'gray',
     },
+    topHalf: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white',
+    },
+    mapImage: {
+        width: '95%',
+        height: '95%',
+        borderRadius: 30,
+    },
+    bottomHalf: {
+        flex: 1,
+        backgroundColor: 'white',
+        paddingHorizontal: 10,
+        paddingBottom: 20,
+    },
+
 });

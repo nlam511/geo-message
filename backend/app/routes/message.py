@@ -68,9 +68,10 @@ def collect_message(
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
 
-    # Prevent collecting own message
-    if message.user_id == current_user.id:
-        raise HTTPException(status_code=400, detail="You cannot collect your own message")
+    # TODO: Collecting own message makes it easy to developement/test so commenting this out.  Uncomment Later.
+    # # Prevent collecting own message
+    # if message.user_id == current_user.id:
+    #     raise HTTPException(status_code=400, detail="You cannot collect your own message")
 
     # Check for duplicate collection
     already_collected = db.query(CollectedMessage).filter_by(
@@ -98,8 +99,7 @@ def get_collected_messages(
     db: Session - Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
-    # Join CollectedMessages with Messages and filter by user
+    # Join CollectedMessages with Messages + Filter and Sort
     collected_msgs = (
         db.query(CollectedMessage)
         .join(Message)

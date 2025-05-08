@@ -56,3 +56,68 @@ def nearby_messages(
         })
 
     return nearby_msgs_json
+
+@router.post("/{message_id}/collect")
+def collect_message(
+    message_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Get the message
+    message = db.query(Message).filter(Message.id == message_id).first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    # Prevent collecting own message
+    if message.user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot collect your own message")
+
+    # Check for duplicate collection
+    already_collected = db.query(CollectedMessage).filter_by(
+        user_id=current_user.id,
+        message_id=message_id
+    ).first()
+
+    if already_collected:
+        raise HTTPException(status_code=400, detail="You have already collected this message")
+
+    # Insert collected message
+    new_collection = CollectedMessage(
+        user_id=current_user.id,
+        message_id=message_id,
+        collected_at=datetime.utcnow()
+    )
+    db.add(new_collection)
+    db.commit()
+
+    return {"status": "success", "message": "Message collected!"}
+
+
+@router.get("collected")
+def get_collected_messages(
+    db: Session - Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+
+    # Join CollectedMessages with Messages and filter by user
+    collected_msgs = (
+        db.query(CollectedMessage)
+        .join(Message)
+        .filter(CollectedMessage.user_id == current_user.id)
+        .order_by(desc(CollectedMessage.collected_at))
+        .all()
+    )
+
+    # Convert all CollectedMessages to JSON
+    collected_json_msgs = []
+    for msg in collected_msgs:
+        collected_json_msgs.append({
+            "id": msg.id,
+            "text": msg.text,
+            "longitude": to_shape(msg.location).x,
+            "latitude": to_shape(msg.location).y,
+            "created_at": msg.created_at,
+            "collected_at": entry.collected_at,
+        })
+
+    return collected_json_msgs

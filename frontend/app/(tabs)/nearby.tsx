@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
 
+    // TODO: This runs repeatedly despite not being on this page?
     useEffect(() => {
         let intervalId: ReturnType<typeof setInterval>;
 
@@ -19,6 +21,13 @@ export default function NearbyScreen() {
                     return;
                 }
 
+                // 🔐 Get the token from secure storage
+                const token = await SecureStore.getItemAsync("user_token");
+                if (!token) {
+                    Alert.alert("❌ You must be logged in to get nearby messages.");
+                    return;
+                }
+
                 // Get current location
                 const location = await Location.getCurrentPositionAsync({});
                 const { latitude, longitude } = location.coords;
@@ -26,7 +35,14 @@ export default function NearbyScreen() {
                 // Fetch messages from backend
                 const backendUrl = Constants.expoConfig?.extra?.backendUrl;
                 const response = await fetch(
-                    `${backendUrl}/message/nearby?latitude=${latitude}&longitude=${longitude}`
+                    `${backendUrl}/message/nearby?latitude=${latitude}&longitude=${longitude}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
                 );
                 const data = await response.json();
                 setMessages(data);

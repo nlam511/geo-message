@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.db_session import get_db
-from app.models import Message
+from app.models import Message, CollectedMessage
 from datetime import datetime
 from app.utils.geo import calculate_distance
 from app.utils.auth import get_current_user
@@ -34,8 +34,10 @@ def drop_message(payload: MessageInput, db: Session = Depends(get_db), current_u
 def nearby_messages(
     latitude: float = Query(...),
     longitude: float = Query(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
 ):
+    #TODO: Perhaps throw an error or redirect back to login when not authenticated.
 
     # Get Messages that the user already collected, so that it doesnt get populated on the map
     already_collected_msgs = (
@@ -44,18 +46,20 @@ def nearby_messages(
         .subquery()
     )
 
-
-    nearby_msgs = db.query(Message).filter(
-        func.ST_DWithin(
-            Message.location,
-            func.ST_SetSRID(func.ST_MakePoint(longitude, latitude), 4326),
-            100  # # arbitrary radius distance in meters
+    nearby_msgs = (
+        db.query(Message)
+        .filter(
+            func.ST_DWithin(
+                Message.location,
+                func.ST_SetSRID(func.ST_MakePoint(longitude, latitude), 4326),
+                100
+            )
         )
+        .filter(Message.id.notin_(already_collected_msgs))
+        # TODO: Uncomment when ready
+        # .filter(Message.user_id != current_user.id)
+        .all()
     )
-    .filter(Message.id.notin_(already_collected_msgs))
-    # TODO: Allowing this for now for development.  Uncomment later.
-    #.filter(Message.owner_id ! = current_user.id)
-    .all()
 
     nearby_msgs_json = []
     for msg in nearby_msgs:
@@ -74,7 +78,7 @@ def nearby_messages(
 def collect_message(
     message_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user = Depends(get_current_user),
 ):
     # Get the message
     message = db.query(Message).filter(Message.id == message_id).first()
@@ -109,8 +113,8 @@ def collect_message(
 
 @router.get("collected")
 def get_collected_messages(
-    db: Session - Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
 ):
     # Join CollectedMessages with Messages + Filter and Sort
     collected_msgs = (

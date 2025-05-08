@@ -36,6 +36,15 @@ def nearby_messages(
     longitude: float = Query(...),
     db: Session = Depends(get_db)
 ):
+
+    # Get Messages that the user already collected, so that it doesnt get populated on the map
+    already_collected_msgs = (
+        db.query(CollectedMessage.message_id)
+        .filter(CollectedMessage.user_id == current_user.id)
+        .subquery()
+    )
+
+
     nearby_msgs = db.query(Message).filter(
         func.ST_DWithin(
             Message.location,
@@ -43,6 +52,9 @@ def nearby_messages(
             100  # # arbitrary radius distance in meters
         )
     )
+    .filter(Message.id.notin_(already_collected_msgs))
+    .filter(Message.owner_id ! = current_user.id)
+    .all()
 
     nearby_msgs_json = []
     for msg in nearby_msgs:

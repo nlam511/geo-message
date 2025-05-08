@@ -44,7 +44,6 @@ TODOS:
 -- Map View
 -- Refresh Token
 -- Message Collection
--- Spacial Index or Index latitude/longitude with PostGIS
 -- Message Expiry
 -- Friends List
 -- Achievements

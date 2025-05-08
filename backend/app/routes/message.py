@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.db_session import get_db
 from app.models import Message
 from datetime import datetime
@@ -15,8 +16,9 @@ def drop_message(payload: MessageInput, db: Session = Depends(get_db), current_u
     new_message = Message(
         text=payload.text,
         user_id=current_user.id,
-        latitude=payload.latitude,
         longitude=payload.longitude,
+        latitude=payload.latitude,
+        location=func.ST_SetSRID(func.ST_MakePoint(payload.longitude, payload.latitude), 4326),
         created_at=datetime.utcnow()
     )
     db.add(new_message)
@@ -39,10 +41,11 @@ def nearby_messages(
         distance = calculate_distance(latitude, longitude, msg.latitude, msg.longitude)
         if distance <= 100:  # arbitrary radius distance
             nearby_msgs.append({
-                "text": msg.text,
+                "id": msg.id,
                 "user_id": msg.user_id,
-                "latitude": msg.latitude,
+                "text": msg.text,
                 "longitude": msg.longitude,
+                "latitude": msg.latitude,
                 "created_at": msg.created_at,
                 "distance_meters": round(distance, 2)
             })

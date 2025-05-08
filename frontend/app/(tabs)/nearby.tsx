@@ -26,7 +26,7 @@ export default function NearbyScreen() {
                 // Fetch messages from backend
                 const backendUrl = Constants.expoConfig?.extra?.backendUrl;
                 const response = await fetch(
-                    `${backendUrl}/message/nearby_messages?latitude=${latitude}&longitude=${longitude}`
+                    `${backendUrl}/message/nearby?latitude=${latitude}&longitude=${longitude}`
                 );
                 const data = await response.json();
                 setMessages(data);
@@ -46,14 +46,14 @@ export default function NearbyScreen() {
         return () => clearInterval(intervalId);
     }, []);
 
-    { console.log("🚨 Messages:", messages) }
+    console.log("🚨 Messages:", JSON.stringify(messages, null, 2));
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>📍 Nearby Messages</Text>
             <FlatList
                 data={messages}
-                keyExtractor={(item) => item.uuid.toString()}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <View style={styles.messageBox}>
                         <Text style={styles.messageText}>{item.text}</Text>

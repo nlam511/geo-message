@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
+from geoalchemy2 import Geography
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -22,7 +23,8 @@ class Message(Base):
     text = Column(String, nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
-
+    location = Column(Geography(geometry_type='POINT', srid=4326), nullable=False)
+    test = Column(String)
     # Timestamp
     created_at = Column(DateTime, default=datetime.utcnow)
 

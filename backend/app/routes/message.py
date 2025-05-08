@@ -53,7 +53,8 @@ def nearby_messages(
         )
     )
     .filter(Message.id.notin_(already_collected_msgs))
-    .filter(Message.owner_id ! = current_user.id)
+    # TODO: Allowing this for now for development.  Uncomment later.
+    #.filter(Message.owner_id ! = current_user.id)
     .all()
 
     nearby_msgs_json = []

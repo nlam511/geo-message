@@ -39,8 +39,8 @@ def nearby_messages(
         distance = calculate_distance(latitude, longitude, msg.latitude, msg.longitude)
         if distance <= 100:  # arbitrary radius distance
             nearby_msgs.append({
-                "uuid": str(msg.uuid),
                 "text": msg.text,
+                "user_id": msg.user_id,
                 "latitude": msg.latitude,
                 "longitude": msg.longitude,
                 "created_at": msg.created_at,

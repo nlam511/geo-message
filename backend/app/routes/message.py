@@ -7,6 +7,8 @@ from datetime import datetime
 from app.utils.geo import calculate_distance
 from app.utils.auth import get_current_user
 from app.schemas import MessageInput
+from geoalchemy2.shape import to_shape
+
 
 router = APIRouter(prefix="/message", tags=["Messages"])
 
@@ -34,20 +36,23 @@ def nearby_messages(
     longitude: float = Query(...),
     db: Session = Depends(get_db)
 ):
-    all_messages = db.query(Message).all()
+    nearby_msgs = db.query(Message).filter(
+        func.ST_DWithin(
+            Message.location,
+            func.ST_SetSRID(func.ST_MakePoint(longitude, latitude), 4326),
+            100  # # arbitrary radius distance in meters
+        )
+    )
 
-    nearby_msgs = []
-    for msg in all_messages:
-        distance = calculate_distance(latitude, longitude, msg.latitude, msg.longitude)
-        if distance <= 100:  # arbitrary radius distance
-            nearby_msgs.append({
-                "id": msg.id,
-                "user_id": msg.user_id,
-                "text": msg.text,
-                "longitude": msg.longitude,
-                "latitude": msg.latitude,
-                "created_at": msg.created_at,
-                "distance_meters": round(distance, 2)
-            })
+    nearby_msgs_json = []
+    for msg in nearby_msgs:
+        nearby_msgs_json.append({
+            "id": msg.id,
+            "user_id": msg.user_id,
+            "text": msg.text,
+            "longitude": to_shape(msg.location).x,
+            "latitude": to_shape(msg.location).y,
+            "created_at": msg.created_at,
+        })
 
-    return nearby_msgs
+    return nearby_msgs_json

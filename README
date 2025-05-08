@@ -41,12 +41,20 @@ python -m app.db
 
 
 TODOS:
+
+TOP PRIORITY
 -- Map View
 -- Refresh Token
--- Message Collection
+-- Message Collection Front End
+-- Push Notification when a message is collected.
+
+
+Not So Urgent
 -- Message Expiry
+-- Keep metadata about how many times a message has been collected?
 -- Friends List
 -- Achievements
+-- Collectables
 -- Different type of messages
 -- Subscription Model
 -- loading screen

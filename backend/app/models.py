@@ -3,7 +3,7 @@ from geoalchemy2 import Geography
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import uuid
 
@@ -57,6 +57,7 @@ class CollectedMessage(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
     message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"), primary_key=True)
 
+    # Main Content
     collected_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -64,3 +65,21 @@ class CollectedMessage(Base):
     user = relationship("User", back_populates="collected_messages")
     # Link back to the message that was collected
     message = relationship("Message", back_populates="collected_by")
+
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    # Primary Keys
+    # The actual refresh token string (UUID). Used as the lookup key and sent to the client.
+    token = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+
+    # Main Content
+    # Foreign key to the user who owns this refresh token.
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    # Expiration datetime. Token becomes invalid after this.
+    expires_at = Column(DateTime, default=lambda: datetime.utcnow() + timedelta(days=7))
+
+    # Relationships
+    # ORM relationship to the User model. Allows access like `refresh_token.user`.
+    user = relationship("User", backref="refresh_tokens")

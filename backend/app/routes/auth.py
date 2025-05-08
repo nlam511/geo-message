@@ -54,3 +54,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         "user_id": str(user.id),
         "email": user.email
     }
+
+@router.get("/refresh")
+def refresh_token()
+    pass

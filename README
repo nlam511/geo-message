@@ -43,10 +43,11 @@ python -m app.db
 TODOS:
 
 TOP PRIORITY
--- Map View
--- Refresh Token
+-- Add An Interactive Map that Allows you to 
+-- Implement Refresh Token
 -- Message Collection Front End
 -- Push Notification when a message is collected.
+-- Click Messages to be able to expand it in to See all details
 -- Add Logout
 
 

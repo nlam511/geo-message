@@ -1,15 +1,15 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function RootLayout() {
   const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const segments = useSegments();
-  
-  // 1. Check auth and update state
+
   useEffect(() => {
     const checkAuth = async () => {
       const token = await SecureStore.getItemAsync('token');
@@ -19,7 +19,6 @@ export default function RootLayout() {
     checkAuth();
   }, []);
 
-  // 2. React to auth check results
   useEffect(() => {
     if (!isAuthChecked) return;
 
@@ -30,15 +29,15 @@ export default function RootLayout() {
     }
   }, [isAuthChecked, isAuthenticated]);
 
-
-  // Shows the loading page
-  if (!isAuthChecked) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  return <Slot />;
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {!isAuthChecked ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator />
+        </View>
+      ) : (
+        <Slot />
+      )}
+    </GestureHandlerRootView>
+  );
 }

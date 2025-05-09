@@ -11,6 +11,83 @@ export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
 
+    // ✅ Add the swipe render functions here
+    const renderRightActions = (item: any) => (
+        <TouchableOpacity
+            style={[styles.swipeAction, styles.dismissSwipe]}
+            onPress={async () => {
+                try {
+                    const token = await SecureStore.getItemAsync("user_token");
+                    if (!token) {
+                        Alert.alert("Not logged in", "Please log in to collect messages.");
+                        return;
+                    }
+
+                    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+                    const response = await fetch(
+                        `${backendUrl}/message/${item.id}/collect`,
+                        {
+                            method: "POST",
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                "Content-Type": "application/json",
+                            },
+                        }
+                    );
+
+                    if (response.ok) {
+                        Alert.alert("✅ Collected!", "Message successfully collected.");
+                        setMessages(prev => prev.filter(msg => msg.id !== item.id));
+                    } else {
+                        const error = await response.json();
+                        Alert.alert("❌ Failed", error.detail || "Could not collect message.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Alert.alert("❌ Error", "Something went wrong.");
+                }
+            }}
+        >
+            <Text style={styles.swipeText}>Collect</Text>
+        </TouchableOpacity>
+    );
+
+    const renderLeftActions = (item: any) => (
+        <TouchableOpacity
+            style={[styles.swipeAction, styles.dismissSwipe]}
+            onPress={async () => {
+                try {
+                    const token = await SecureStore.getItemAsync("user_token");
+                    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+                    const response = await fetch(
+                        `${backendUrl}/message/${item.id}/dismiss`,
+                        {
+                            method: "POST",
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                "Content-Type": "application/json",
+                            },
+                        }
+                    );
+
+                    if (response.ok) {
+                        Alert.alert("🚫 Dismissed", "Message will no longer appear.");
+                        setMessages((prev) => prev.filter((msg) => msg.id !== item.id));
+                    } else {
+                        const error = await response.json();
+                        Alert.alert("❌ Failed", error.detail || "Dismiss failed.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Alert.alert("❌ Error", "Something went wrong.");
+                }
+            }}
+        >
+            <Text style={styles.swipeText}>Dismiss</Text>
+        </TouchableOpacity>
+    );
+
+
     useFocusEffect(
         useCallback(() => {
             let intervalId: ReturnType<typeof setInterval>;
@@ -83,18 +160,18 @@ export default function NearbyScreen() {
                     data={messages}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                        //   <Swipeable
-                        //     key={item.id}
-                        //     renderLeftActions={renderLeftActions}
-                        //     renderRightActions={() => renderRightActions(item)}
-                        //   >
-                        <TouchableOpacity onPress={() => setSelectedMessage(item)}>
-                            <View style={styles.messageBox}>
-                                <Text style={styles.messageText}>{item.text}</Text>
-                                <Text style={styles.meta}>📍 Lat: {item.latitude}, Lng: {item.longitude}</Text>
-                            </View>
-                        </TouchableOpacity>
-                        // </Swipeable>
+                        <Swipeable
+                            renderLeftActions={() => renderLeftActions(item)}
+                            renderRightActions={() => renderRightActions(item)}
+                        >
+
+                            <TouchableOpacity onPress={() => setSelectedMessage(item)}>
+                                <View style={styles.messageBox}>
+                                    <Text style={styles.messageText}>{item.text}</Text>
+                                    <Text style={styles.meta}>📍 Lat: {item.latitude}, Lng: {item.longitude}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </Swipeable>
                     )}
                     ListEmptyComponent={<Text style={styles.empty}>No messages nearby.</Text>}
                 />
@@ -330,6 +407,25 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
         textAlign: 'center',
+    },
+    swipeAction: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 100,
+        height: '100%',
+    },
+
+    dismissSwipe: {
+        backgroundColor: '#FF3B30',
+    },
+
+    collectSwipe: {
+        backgroundColor: '#007AFF',
+    },
+
+    swipeText: {
+        color: 'white',
+        fontWeight: '600',
     },
 
 });

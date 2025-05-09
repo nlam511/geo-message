@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.db_session import get_db
@@ -127,6 +127,7 @@ def get_collected_messages(
         .order_by(desc(CollectedMessage.collected_at))
         .all()
     )
+    print(len(collected_msgs))
 
     # Convert all CollectedMessages to JSON
     collected_json_msgs = []

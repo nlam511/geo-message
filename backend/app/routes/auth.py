@@ -56,8 +56,40 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     }
 
 @router.post("/logout")
-    pass
+def logout(db: Session = Depends(get_db), current_user: Depends(get_current_user)):
+    #TODO: Make sure you clear the access_token and refresh_token from the front end when you call this
+    # Find the refresh token record
+    token_entry = db.query(RefreshToken).filter_by(
+        token=token,
+        user_id=current_user.id
+    ).first()
+
+    if not token_entry:
+        raise HTTPException(status_code=404, detail="Refresh token not found")
+
+    # Remove the refresh token
+    db.delete(token_entry)
+    db.commit()
+
+    return {"status": "success", "message": "Logged out"}
 
 @router.post("/refresh")
-def refresh_token()
-    pass
+def refresh_token(token: str, db: Session = Depends(get_db)):
+    # Look up the token
+    entry = db.query(RefreshToken).filter_by(token=token).first()
+    if not entry:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    # Check expiration
+    if entry.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Expired refresh token")
+
+    # Load user
+    user = db.query(User).filter_by(id=entry.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Generate new access token
+    access_token = create_access_token(user)
+
+    return {"access_token": access_token}

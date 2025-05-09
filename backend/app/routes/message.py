@@ -27,7 +27,10 @@ def drop_message(payload: MessageInput, db: Session = Depends(get_db), current_u
     db.commit()
     db.refresh(new_message)
 
-    return {"id": new_message.id, "message": "Message dropped successfully."}
+    return {
+        "id": new_message.id,
+         "message": "Message dropped successfully."
+    }
 
 
 @router.get("/nearby")

@@ -53,7 +53,7 @@ export default function CollectedScreen() {
 
             // Cleanup on unmount
             return () => clearInterval(intervalId);
-        }, [])
+        }, [selectedMessage])
     );
 
     return (

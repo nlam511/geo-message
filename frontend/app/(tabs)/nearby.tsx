@@ -47,6 +47,7 @@ export default function NearbyScreen() {
                 );
                 const data = await response.json();
                 setMessages(data);
+                console.log("🚨 Polled Nearby Messages");
             } catch (error) {
                 console.error(error);
                 Alert.alert('Could not fetch nearby messages.');
@@ -62,9 +63,6 @@ export default function NearbyScreen() {
         // Cleanup on unmount
         return () => clearInterval(intervalId);
     }, []);
-
-    console.log("🚨 Messages:", JSON.stringify(messages, null, 2));
-
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
@@ -119,6 +117,7 @@ const styles = StyleSheet.create({
     },
     meta: {
         fontSize: 12,
+        
         color: 'gray',
     },
     empty: {

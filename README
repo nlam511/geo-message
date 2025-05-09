@@ -45,16 +45,19 @@ TODOS:
 TOP PRIORITY
 -- Add An Interactive Map w/ Markers of nearby messages
 -- Implement Refresh Token to front end
--- Add a front end tab to view Collected Messages
 -- Click Messages to be able to expand it in to See all details (in both message collected tab and nearby messages tab)
 -- Push Notification when someone collects your message.
--- Profile Tab w/ Logout button
+-- Add Ability to collect a message on the nearby tab
+-- Add Ability to dismiss message so it doesnt show up for that user on the Nearby Tab
+-- Add Animation to collect/dismiss message
+-- Add Sound to collect/dismiss message
 
 -- Make it so you have to log in to use the app.
 -- Make sure to handle the cases where a user's token expire in the middle of using the app/ the refresh token retrieval doesnt work.
 
 
 Not So Urgent
+-- Profile Tab w/ Logout button
 -- Collectables
 -- Message Expiry
 -- Keep metadata about how many times a message has been collected?

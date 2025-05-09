@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db_session import get_db
 from app.models import User
-from app.utils.auth import hash_password, verify_password, create_access_token
+from app.utils.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.schemas import UserCreate, LoginRequest
 
 import uuid
@@ -58,7 +58,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     }
 
 @router.post("/logout")
-def logout(db: Session = Depends(get_db), current_user: Depends(get_current_user)):
+def logout(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     #TODO: Make sure you clear the access_token and refresh_token from the front end when you call this
     # Find the refresh token record
     token_entry = db.query(RefreshToken).filter_by(

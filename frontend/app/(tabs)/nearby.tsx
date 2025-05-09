@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, FlatList, Alert, Image, TouchableOpacity, Modal } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
@@ -9,60 +10,61 @@ export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
 
-    // TODO: This runs repeatedly despite not being on this page?
-    useEffect(() => {
-        let intervalId: ReturnType<typeof setInterval>;
+    useFocusEffect(
+        useCallback(() => {
+            let intervalId: ReturnType<typeof setInterval>;
 
-        const fetchNearbyMessages = async () => {
-            try {
-                // Get location permission
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    Alert.alert('Location permission is required to find nearby messages.');
-                    return;
-                }
-
-                // 🔐 Get the token from secure storage
-                const token = await SecureStore.getItemAsync("user_token");
-                if (!token) {
-                    Alert.alert("❌ You must be logged in to get nearby messages.");
-                    return;
-                }
-
-                // Get current location
-                const location = await Location.getCurrentPositionAsync({});
-                const { latitude, longitude } = location.coords;
-
-                // Fetch messages from backend
-                const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-                const response = await fetch(
-                    `${backendUrl}/message/nearby?latitude=${latitude}&longitude=${longitude}`,
-                    {
-                        method: "GET",
-                        headers: {
-                            "Authorization": `Bearer ${token}`,
-                            "Content-Type": "application/json",
-                        },
+            const fetchNearbyMessages = async () => {
+                try {
+                    // Get location permission
+                    const { status } = await Location.requestForegroundPermissionsAsync();
+                    if (status !== 'granted') {
+                        Alert.alert('Location permission is required to find nearby messages.');
+                        return;
                     }
-                );
-                const data = await response.json();
-                setMessages(data);
-                console.log("🚨 Polled Nearby Messages");
-            } catch (error) {
-                console.error(error);
-                Alert.alert('Could not fetch nearby messages.');
-            }
-        };
 
-        // First fetch immediately
-        fetchNearbyMessages();
+                    // 🔐 Get the token from secure storage
+                    const token = await SecureStore.getItemAsync("user_token");
+                    if (!token) {
+                        Alert.alert("❌ You must be logged in to get nearby messages.");
+                        return;
+                    }
 
-        // Then repeat every 5 seconds
-        intervalId = setInterval(fetchNearbyMessages, 5000);
+                    // Get current location
+                    const location = await Location.getCurrentPositionAsync({});
+                    const { latitude, longitude } = location.coords;
 
-        // Cleanup on unmount
-        return () => clearInterval(intervalId);
-    }, []);
+                    // Fetch messages from backend
+                    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+                    const response = await fetch(
+                        `${backendUrl}/message/nearby?latitude=${latitude}&longitude=${longitude}`,
+                        {
+                            method: "GET",
+                            headers: {
+                                "Authorization": `Bearer ${token}`,
+                                "Content-Type": "application/json",
+                            },
+                        }
+                    );
+                    const data = await response.json();
+                    setMessages(data);
+                    console.log("🚨 Polled Nearby Messages");
+                } catch (error) {
+                    console.error(error);
+                    Alert.alert('Could not fetch nearby messages.');
+                }
+            };
+
+            // First fetch immediately
+            fetchNearbyMessages();
+
+            // Then repeat every 5 seconds
+            intervalId = setInterval(fetchNearbyMessages, 5000);
+
+            // Cleanup on unmount
+            return () => clearInterval(intervalId);
+        }, [])
+    );
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>

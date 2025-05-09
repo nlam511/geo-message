@@ -1,64 +1,70 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CollectedScreen() {
     const [messages, setMessages] = useState<any[]>([]);
 
-    useEffect(() => {
-        let intervalId: ReturnType<typeof setInterval>;
+    useFocusEffect(
+        useCallback(() => {
+            let intervalId: ReturnType<typeof setInterval>;
 
-        const fetchCollectedMessages = async () => {
-            try {
-                const token = await SecureStore.getItemAsync("user_token");
-                if (!token) {
-                    Alert.alert("Not logged in", "Please log in to see your collected messages.");
-                    return;
+            const fetchCollectedMessages = async () => {
+                try {
+                    const token = await SecureStore.getItemAsync("user_token");
+                    if (!token) {
+                        Alert.alert("Not logged in", "Please log in to see your collected messages.");
+                        return;
+                    }
+
+                    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+                    const response = await fetch(`${backendUrl}/message/collected`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    const data = await response.json();
+                    setMessages(data);
+                    console.log("🚨 Polled Collected Messages");
+                } catch (err) {
+                    console.error(err);
+                    Alert.alert("Error", "Could not load collected messages.");
                 }
+            };
 
-                const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-                const response = await fetch(`${backendUrl}/message/collected`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                const data = await response.json();
-                setMessages(data);
-                console.log("🚨 Polled Collected Messages");
-            } catch (err) {
-                console.error(err);
-                Alert.alert("Error", "Could not load collected messages.");
-            }
-        };
-
-        fetchCollectedMessages();
+            fetchCollectedMessages();
 
 
-        // Then repeat every 5 seconds
-        intervalId = setInterval(fetchCollectedMessages, 5000);
+            // Then repeat every 5 seconds
+            intervalId = setInterval(fetchCollectedMessages, 5000);
 
-        // Cleanup on unmount
-        return () => clearInterval(intervalId);
-    }, []);
+            // Cleanup on unmount
+            return () => clearInterval(intervalId);
+        }, [])
+    );
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>📥 Collected Messages</Text>
-            <FlatList
-                data={messages}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <View style={styles.messageBox}>
-                        <Text style={styles.messageText}>{item.text}</Text>
-                        <Text style={styles.meta}>🕓 Collected: {new Date(item.collected_at).toLocaleString()}</Text>
-                    </View>
-                )}
-                ListEmptyComponent={<Text style={styles.empty}>No messages collected yet.</Text>}
-            />
-        </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+            <View style={styles.container}>
+                <Text style={styles.title}>📥 Collected Messages</Text>
+                <FlatList
+                    data={messages}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <View style={styles.messageBox}>
+                            <Text style={styles.messageText}>{item.text}</Text>
+                            <Text style={styles.meta}>🕓 Collected: {new Date(item.collected_at).toLocaleString()}</Text>
+                        </View>
+                    )}
+                    ListEmptyComponent={<Text style={styles.empty}>No messages collected yet.</Text>}
+                />
+            </View>
+        </SafeAreaView>
     );
 }
 

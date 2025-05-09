@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from app.db_session import get_db
 from app.models import Message, CollectedMessage
 from datetime import datetime
@@ -114,7 +114,7 @@ def collect_message(
     return {"status": "success", "message": "Message collected!"}
 
 
-@router.get("collected")
+@router.get("/collected")
 def get_collected_messages(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
@@ -131,14 +131,14 @@ def get_collected_messages(
 
     # Convert all CollectedMessages to JSON
     collected_json_msgs = []
-    for msg in collected_msgs:
+    for collected_msg in collected_msgs:
         collected_json_msgs.append({
-            "id": msg.id,
-            "text": msg.text,
-            "longitude": to_shape(msg.location).x,
-            "latitude": to_shape(msg.location).y,
-            "created_at": msg.created_at,
-            "collected_at": entry.collected_at,
+            "id": collected_msg.message_id,
+            "text": collected_msg.message.text,
+            "longitude": to_shape(collected_msg.message.location).x,
+            "latitude": to_shape(collected_msg.message.location).y,
+            "created_at": collected_msg.message.created_at,
+            "collected_at": collected_msg.collected_at,
         })
 
     return collected_json_msgs

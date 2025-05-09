@@ -49,7 +49,7 @@ TOP PRIORITY
 -- Push Notification when someone collects your message.
 -- Add Ability to collect a message on the nearby tab
 -- Add Ability to dismiss message so it doesnt show up for that user on the Nearby Tab
--- Add Animation to collect/dismiss message
+-- Add Animation to collect/dismiss message?
 -- Add Sound to collect/dismiss message
 
 -- Make it so you have to log in to use the app.
@@ -67,5 +67,6 @@ Not So Urgent
 -- Subscription Model
 -- loading screen
 -- Index the location column?
+-- currently polling every 5 seconds, see if theres a better way to do this.
 
 -- test the relationship stuff, i dont quite understand it

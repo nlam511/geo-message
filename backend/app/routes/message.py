@@ -49,6 +49,13 @@ def nearby_messages(
         .subquery()
     )
 
+    # Get Messages that the user has dismissed, so that it doesnt get populated on the map
+    dismissed_msgs = (
+        db.query(DismissedMessage.message_id)
+        .filter(DismissedMessage.user_id == current_user.id)
+        .subquery()
+    )
+
     nearby_msgs = (
         db.query(Message)
         .filter(
@@ -59,6 +66,7 @@ def nearby_messages(
             )
         )
         .filter(Message.id.notin_(already_collected_msgs))
+        .filter(Message.id.notin_(dismissed_msgs))
         # TODO: Uncomment when ready
         # .filter(Message.user_id != current_user.id)
         .all()
@@ -112,6 +120,26 @@ def collect_message(
     db.commit()
 
     return {"status": "success", "message": "Message collected!"}
+
+
+
+@router.post("/message/{id}/dismiss")
+def dismiss_message(
+    message_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+):
+    # Check if already dismissed
+    exists = db.query(DismissedMessage).filter_by(
+        user_id=current_user.id,
+        message_id=message_id
+    ).first()
+
+    if not exists:
+        db.add(DismissedMessage(user_id=current_user.id, message_id=id))
+        db.commit()
+
+    return {"detail": "Message dismissed."}
 
 
 @router.get("/collected")

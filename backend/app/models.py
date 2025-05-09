@@ -66,15 +66,15 @@ class CollectedMessage(Base):
     # Link back to the message that was collected
     message = relationship("Message", back_populates="collected_by")
 
-class DismissedMessage(Base):
-    __tablename__ = "dismissed_messages"
+class HiddenMessage(Base):
+    __tablename__ = "hidden_messages"
 
     # Primary Keys
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
     message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"), primary_key=True)
 
     # Main Content
-    dismissed_at = Column(DateTime, default=datetime.utcnow)
+    hidden_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     # Link back to the user who collected the message

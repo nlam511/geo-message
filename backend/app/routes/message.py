@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.db_session import get_db
-from app.models import Message, CollectedMessage, DismissedMessage
+from app.models import Message, CollectedMessage, HiddenMessage
 from datetime import datetime
 from app.utils.geo import calculate_distance
 from app.utils.auth import get_current_user
@@ -49,10 +49,10 @@ def nearby_messages(
         .subquery()
     )
 
-    # Get Messages that the user has dismissed, so that it doesnt get populated on the map
-    dismissed_msgs = (
-        db.query(DismissedMessage.message_id)
-        .filter(DismissedMessage.user_id == current_user.id)
+    # Get Messages that the user has hidden, so that it doesnt get populated on the map
+    hidden_msgs = (
+        db.query(HiddenMessage.message_id)
+        .filter(HiddenMessage.user_id == current_user.id)
         .subquery()
     )
 
@@ -66,7 +66,7 @@ def nearby_messages(
             )
         )
         .filter(Message.id.notin_(already_collected_msgs))
-        .filter(Message.id.notin_(dismissed_msgs))
+        .filter(Message.id.notin_(hidden_msgs))
         # TODO: Uncomment when ready
         # .filter(Message.user_id != current_user.id)
         .all()
@@ -123,28 +123,28 @@ def collect_message(
 
 
 
-@router.post("/{message_id}/dismiss")
-def dismiss_message(
+@router.post("/{message_id}/hide")
+def hide_message(
     message_id: str,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
 ):
-    # Check if already dismissed
-    exists = db.query(DismissedMessage).filter_by(
+    # Check if already hidden
+    exists = db.query(HiddenMessage).filter_by(
         user_id=current_user.id,
         message_id=message_id
     ).first()
 
     if not exists:
-        new_dismissal = DismissedMessage(
+        hidden_message = HiddenMessage(
             user_id=current_user.id, 
             message_id=message_id, 
-            dismissed_at=datetime.utcnow()
+            hidden_at=datetime.utcnow()
         )
-        db.add(new_dismissal)
+        db.add(hidden_message)
         db.commit()
 
-    return {"detail": "Message dismissed."}
+    return {"detail": "Message hidden."}
 
 
 @router.get("/collected")

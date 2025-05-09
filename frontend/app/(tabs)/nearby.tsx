@@ -14,7 +14,7 @@ export default function NearbyScreen() {
     // ✅ Add the swipe render functions here
     const renderRightActions = (item: any) => (
         <TouchableOpacity
-            style={[styles.swipeAction, styles.dismissSwipe]}
+            style={[styles.swipeAction, styles.hideSwipe]}
             onPress={async () => {
                 try {
                     const token = await SecureStore.getItemAsync("user_token");
@@ -54,13 +54,13 @@ export default function NearbyScreen() {
 
     const renderLeftActions = (item: any) => (
         <TouchableOpacity
-            style={[styles.swipeAction, styles.dismissSwipe]}
+            style={[styles.swipeAction, styles.hideSwipe]}
             onPress={async () => {
                 try {
                     const token = await SecureStore.getItemAsync("user_token");
                     const backendUrl = Constants.expoConfig?.extra?.backendUrl;
                     const response = await fetch(
-                        `${backendUrl}/message/${item.id}/dismiss`,
+                        `${backendUrl}/message/${item.id}/hide`,
                         {
                             method: "POST",
                             headers: {
@@ -71,11 +71,11 @@ export default function NearbyScreen() {
                     );
 
                     if (response.ok) {
-                        Alert.alert("🚫 Dismissed", "Message will no longer appear.");
+                        Alert.alert("🚫 Hidden", "Message will no longer appear.");
                         setMessages((prev) => prev.filter((msg) => msg.id !== item.id));
                     } else {
                         const error = await response.json();
-                        Alert.alert("❌ Failed", error.detail || "Dismiss failed.");
+                        Alert.alert("❌ Failed", error.detail || "Hiding message failed.");
                     }
                 } catch (error) {
                     console.error(error);
@@ -83,7 +83,7 @@ export default function NearbyScreen() {
                 }
             }}
         >
-            <Text style={styles.swipeText}>Dismiss</Text>
+            <Text style={styles.swipeText}>Hide</Text>
         </TouchableOpacity>
     );
 
@@ -242,18 +242,18 @@ export default function NearbyScreen() {
                                 <Text style={styles.collectButtonText}>Collect</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={styles.dismissButton}
+                                style={styles.hideButton}
                                 onPress={async () => {
                                     try {
                                         const token = await SecureStore.getItemAsync("user_token");
                                         if (!token) {
-                                            Alert.alert("Not logged in", "Please log in to dismiss messages.");
+                                            Alert.alert("Not logged in", "Please log in to hide messages.");
                                             return;
                                         }
 
                                         const backendUrl = Constants.expoConfig?.extra?.backendUrl;
                                         const response = await fetch(
-                                            `${backendUrl}/message/${selectedMessage.id}/dismiss`,
+                                            `${backendUrl}/message/${selectedMessage.id}/hide`,
                                             {
                                                 method: "POST",
                                                 headers: {
@@ -264,11 +264,11 @@ export default function NearbyScreen() {
                                         );
 
                                         if (response.ok) {
-                                            Alert.alert("🚫 Dismissed", "Message will no longer appear.");
+                                            Alert.alert("🚫 Hidden", "Message will no longer appear.");
                                             setSelectedMessage(null); // Close the modal
                                         } else {
                                             const error = await response.json();
-                                            Alert.alert("❌ Failed", error.detail || "Dismiss failed.");
+                                            Alert.alert("❌ Failed", error.detail || "Hiding message failed.");
                                         }
                                     } catch (error) {
                                         console.error(error);
@@ -276,7 +276,7 @@ export default function NearbyScreen() {
                                     }
                                 }}
                             >
-                                <Text style={styles.dismissButtonText}>Dismiss</Text>
+                                <Text style={styles.hideButtonText}>Hide</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableOpacity>
@@ -394,15 +394,14 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 16,
     },
-    dismissButton: {
+    hideButton: {
         backgroundColor: '#FF3B30',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,
         marginTop: 10,
     },
-
-    dismissButtonText: {
+    hideButtonText: {
         color: 'white',
         fontSize: 16,
         fontWeight: '500',
@@ -414,11 +413,9 @@ const styles = StyleSheet.create({
         width: 100,
         height: '100%',
     },
-
-    dismissSwipe: {
+    hideSwipe: {
         backgroundColor: '#FF3B30',
     },
-
     collectSwipe: {
         backgroundColor: '#007AFF',
     },

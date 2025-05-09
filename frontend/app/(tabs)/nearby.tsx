@@ -15,33 +15,32 @@ export default function NearbyScreen() {
             let intervalId: ReturnType<typeof setInterval>;
 
             const fetchNearbyMessages = async () => {
+                // Skip polling if modal is open
+                if (selectedMessage) return;
+
                 try {
-                    // Get location permission
                     const { status } = await Location.requestForegroundPermissionsAsync();
                     if (status !== 'granted') {
                         Alert.alert('Location permission is required to find nearby messages.');
                         return;
                     }
 
-                    // 🔐 Get the token from secure storage
                     const token = await SecureStore.getItemAsync("user_token");
                     if (!token) {
                         Alert.alert("❌ You must be logged in to get nearby messages.");
                         return;
                     }
 
-                    // Get current location
                     const location = await Location.getCurrentPositionAsync({});
                     const { latitude, longitude } = location.coords;
 
-                    // Fetch messages from backend
                     const backendUrl = Constants.expoConfig?.extra?.backendUrl;
                     const response = await fetch(
                         `${backendUrl}/message/nearby?latitude=${latitude}&longitude=${longitude}`,
                         {
                             method: "GET",
                             headers: {
-                                "Authorization": `Bearer ${token}`,
+                                Authorization: `Bearer ${token}`,
                                 "Content-Type": "application/json",
                             },
                         }
@@ -55,15 +54,19 @@ export default function NearbyScreen() {
                 }
             };
 
-            // First fetch immediately
+            // Run once immediately
             fetchNearbyMessages();
 
-            // Then repeat every 5 seconds
-            intervalId = setInterval(fetchNearbyMessages, 5000);
+            // Start interval if modal is not open
+            intervalId = setInterval(() => {
+                if (!selectedMessage) {
+                    fetchNearbyMessages();
+                }
+            }, 5000);
 
-            // Cleanup on unmount
+            // Cleanup
             return () => clearInterval(intervalId);
-        }, [])
+        }, [selectedMessage])
     );
 
     return (

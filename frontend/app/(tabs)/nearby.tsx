@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Swipeable } from 'react-native-gesture-handler';
 
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
@@ -82,12 +83,18 @@ export default function NearbyScreen() {
                     data={messages}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
+                    //   <Swipeable
+                    //     key={item.id}
+                    //     renderLeftActions={renderLeftActions}
+                    //     renderRightActions={() => renderRightActions(item)}
+                    //   >
                         <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                             <View style={styles.messageBox}>
                                 <Text style={styles.messageText}>{item.text}</Text>
                                 <Text style={styles.meta}>📍 Lat: {item.latitude}, Lng: {item.longitude}</Text>
                             </View>
                         </TouchableOpacity>
+                        // </Swipeable>
                     )}
                     ListEmptyComponent={<Text style={styles.empty}>No messages nearby.</Text>}
                 />

@@ -45,10 +45,9 @@ TODOS:
 TOP PRIORITY
 -- Add An Interactive Map w/ Markers of nearby messages
 -- Implement Refresh Token to front end
--- Click Messages to be able to expand it in to See all details (in both message collected tab and nearby messages tab)
 -- Push Notification when someone collects your message.
--- Add Ability to collect a message on the nearby tab
 -- Add Ability to dismiss message so it doesnt show up for that user on the Nearby Tab
+-- Add left/right swipe to dismiss/collect
 -- Add Animation to collect/dismiss message?
 -- Add Sound to collect/dismiss message
 

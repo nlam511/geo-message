@@ -5,3 +5,9 @@
 - Mounting is the first render
 - A screen (or component) renders when: its own useState/useReducer changes, its parent rerender and pass new props, context value is subscribes to changes, a use effect indirectly triggefrs a state update.
 - Look back into SQL Relationships.  I dont get it at all
+- View - a div, container for compones
+- Stack - stack of screens, you pusha new screen on top when navigating and pop if off when going back
+- Tab, row of icons, to let users switch beteen sections of you apps
+- Modal Component - UI Component that shows content in a layer on top of the current screen
+    - blocks interaction with the underlying UI until dismissed.
+    

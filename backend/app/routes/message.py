@@ -40,7 +40,7 @@ def nearby_messages(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
 ):
-    #TODO: Perhaps throw an error or redirect back to login when not authenticated.
+    # TODO: Perhaps throw an error or redirect back to login when not authenticated.
 
     # Get Messages that the user already collected, so that it doesnt get populated on the map
     already_collected_msgs = (

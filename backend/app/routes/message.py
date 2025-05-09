@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.db_session import get_db
-from app.models import Message, CollectedMessage
+from app.models import Message, CollectedMessage, DismissedMessage
 from datetime import datetime
 from app.utils.geo import calculate_distance
 from app.utils.auth import get_current_user
@@ -123,7 +123,7 @@ def collect_message(
 
 
 
-@router.post("/message/{id}/dismiss")
+@router.post("/{message_id}/dismiss")
 def dismiss_message(
     message_id: str,
     db: Session = Depends(get_db),
@@ -136,7 +136,12 @@ def dismiss_message(
     ).first()
 
     if not exists:
-        db.add(DismissedMessage(user_id=current_user.id, message_id=id))
+        new_dismissal = DismissedMessage(
+            user_id=current_user.id, 
+            message_id=message_id, 
+            dismissed_at=datetime.utcnow()
+        )
+        db.add(new_dismissal)
         db.commit()
 
     return {"detail": "Message dismissed."}

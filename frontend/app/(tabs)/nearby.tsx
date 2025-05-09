@@ -83,11 +83,11 @@ export default function NearbyScreen() {
                     data={messages}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                    //   <Swipeable
-                    //     key={item.id}
-                    //     renderLeftActions={renderLeftActions}
-                    //     renderRightActions={() => renderRightActions(item)}
-                    //   >
+                        //   <Swipeable
+                        //     key={item.id}
+                        //     renderLeftActions={renderLeftActions}
+                        //     renderRightActions={() => renderRightActions(item)}
+                        //   >
                         <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                             <View style={styles.messageBox}>
                                 <Text style={styles.messageText}>{item.text}</Text>
@@ -163,6 +163,43 @@ export default function NearbyScreen() {
                                 }}
                             >
                                 <Text style={styles.collectButtonText}>Collect</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.dismissButton}
+                                onPress={async () => {
+                                    try {
+                                        const token = await SecureStore.getItemAsync("user_token");
+                                        if (!token) {
+                                            Alert.alert("Not logged in", "Please log in to dismiss messages.");
+                                            return;
+                                        }
+
+                                        const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+                                        const response = await fetch(
+                                            `${backendUrl}/message/${selectedMessage.id}/dismiss`,
+                                            {
+                                                method: "POST",
+                                                headers: {
+                                                    Authorization: `Bearer ${token}`,
+                                                    "Content-Type": "application/json",
+                                                },
+                                            }
+                                        );
+
+                                        if (response.ok) {
+                                            Alert.alert("🚫 Dismissed", "Message will no longer appear.");
+                                            setSelectedMessage(null); // Close the modal
+                                        } else {
+                                            const error = await response.json();
+                                            Alert.alert("❌ Failed", error.detail || "Dismiss failed.");
+                                        }
+                                    } catch (error) {
+                                        console.error(error);
+                                        Alert.alert("❌ Error", "Something went wrong.");
+                                    }
+                                }}
+                            >
+                                <Text style={styles.dismissButtonText}>Dismiss</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableOpacity>
@@ -279,6 +316,20 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: '600',
         fontSize: 16,
+    },
+    dismissButton: {
+        backgroundColor: '#FF3B30',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        marginTop: 10,
+    },
+
+    dismissButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+        textAlign: 'center',
     },
 
 });

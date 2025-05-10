@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, Respond, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.db_session import get_db
@@ -27,10 +27,7 @@ def drop_message(payload: MessageInput, db: Session = Depends(get_db), current_u
     db.commit()
     db.refresh(new_message)
 
-    return {
-        "id": new_message.id,
-         "message": "Message dropped successfully."
-    }
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/nearby")
@@ -119,7 +116,28 @@ def collect_message(
     db.add(new_collection)
     db.commit()
 
-    return {"status": "success", "message": "Message collected!"}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{message_id}/uncollect")
+def uncollect_message(
+    message_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+):
+    # Get the collected message
+    collected_msg = (
+        db.query(CollectedMessage)
+        .filter(CollectedMessage.id == message_id)
+        .filter(CollectedMessage.user_id == current_user.id)
+        .first()
+     )
+  
+    if collected_msg:
+        db.delete(collected_msg)
+        db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 
@@ -144,7 +162,7 @@ def hide_message(
         db.add(hidden_message)
         db.commit()
 
-    return {"detail": "Message hidden."}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/collected")
@@ -160,7 +178,6 @@ def get_collected_messages(
         .order_by(desc(CollectedMessage.collected_at))
         .all()
     )
-    print(len(collected_msgs))
 
     # Convert all CollectedMessages to JSON
     collected_json_msgs = []

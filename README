@@ -46,18 +46,21 @@ TOP PRIORITY
 -- Add An Interactive Map w/ Markers of nearby messages
 -- Implement Refresh Token to front end
 -- Push Notification when someone collects your message.
--- Add Ability to dismiss message so it doesnt show up for that user on the Nearby Tab
--- Add left/right swipe to dismiss/collect
+-- Add left swipe uncollect
 -- Add Animation to collect/dismiss message?
 -- Add Sound to collect/dismiss message
+-- Make the swiping more fluid - like spotify
+-- Register Page, make sure to log in immediately after registration
 
 -- Make it so you have to log in to use the app.
 -- Make sure to handle the cases where a user's token expire in the middle of using the app/ the refresh token retrieval doesnt work.
 
 
 Not So Urgent
--- Profile Tab w/ Logout button
 -- Collectables
+-- Profile Tab w/ Logout button
+-- Index the location column?
+-- currently polling every 5 seconds, see if theres a better way to do this.
 -- Message Expiry
 -- Keep metadata about how many times a message has been collected?
 -- Friends List
@@ -65,7 +68,5 @@ Not So Urgent
 -- Different type of messages
 -- Subscription Model
 -- loading screen
--- Index the location column?
--- currently polling every 5 seconds, see if theres a better way to do this.
 
 -- test the relationship stuff, i dont quite understand it

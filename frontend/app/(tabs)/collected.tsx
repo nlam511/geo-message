@@ -19,12 +19,12 @@ export default function CollectedScreen() {
         <TouchableOpacity
             style={[styles.swipeAction, styles.uncollectSwipe]}
             onPress={async () => {
-                const uncollectResult =  await uncollectMessage(item.id);
+                const uncollectResult = await uncollectMessage(item.id);
                 if (uncollectResult.status === "success") {
                     setMessages(prev => prev.filter(msg => msg.id !== item.id));
-                  } else {
+                } else {
                     Alert.alert("Error", uncollectResult.message);
-                  }
+                }
             }}
         >
             <Text style={styles.swipeText}>Uncollect</Text>
@@ -126,6 +126,24 @@ export default function CollectedScreen() {
                             <Text style={styles.modalMeta}>
                                 📍 Lat: {selectedMessage.latitude}, Lng: {selectedMessage.longitude}
                             </Text>
+
+
+                            <TouchableOpacity
+                                style={styles.uncollectButton}
+                                onPress={async () => {
+                                    const uncollectResult = await uncollectMessage(selectedMessage.id);
+                                    if (uncollectResult.status === "success") {
+                                        Alert.alert("Uncollected", "Message removed from your collection.");
+                                        setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
+                                        setSelectedMessage(null);
+                                    } else {
+                                        Alert.alert("Error", uncollectResult.message);
+                                    }
+                                }}
+                            >
+                                <Text style={styles.uncollectButtonText}>Uncollect</Text>
+                            </TouchableOpacity>
+
                         </View>
                     </TouchableOpacity>
                 </Modal>
@@ -214,13 +232,13 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
     },
-    collectButton: {
+    uncollectButton: {
         backgroundColor: '#007AFF',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,
     },
-    collectButtonText: {
+    uncollectButtonText: {
         color: 'white',
         fontWeight: '600',
         fontSize: 16,

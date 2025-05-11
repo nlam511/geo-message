@@ -164,7 +164,6 @@ export default function NearbyScreen() {
                             renderLeftActions={() => renderLeftActions(item)}
                             renderRightActions={() => renderRightActions(item)}
                         >
-
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                                 <View style={styles.messageBox}>
                                     <Text style={styles.messageText}>{item.text}</Text>

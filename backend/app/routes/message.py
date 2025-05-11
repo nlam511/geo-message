@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, Response, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, asc
+from sqlalchemy import func, desc
 from app.db_session import get_db
 from app.models import Message, CollectedMessage, HiddenMessage
 from datetime import datetime
@@ -66,6 +66,8 @@ def nearby_messages(
         .filter(Message.id.notin_(hidden_msgs))
         # TODO: Uncomment when ready
         # .filter(Message.user_id != current_user.id)
+        # TODO: Change this to order by distance
+        .order_by(desc(Message.created_at))
         .all()
     )
 
@@ -175,7 +177,7 @@ def get_collected_messages(
         db.query(CollectedMessage)
         .join(Message)
         .filter(CollectedMessage.user_id == current_user.id)
-        .order_by(asc(CollectedMessage.collected_at))
+        .order_by(desc(CollectedMessage.collected_at))
         .all()
     )
 

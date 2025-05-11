@@ -28,7 +28,6 @@ export default function LoginScreen() {
 
       if (response.ok) {
         await SecureStore.setItemAsync('user_token', data.access_token);
-        Alert.alert('✅ Login successful');
         router.replace('/'); // ✅ Navigate to main app
       } else {
         Alert.alert('❌ Login failed', data.detail || 'Unknown error');

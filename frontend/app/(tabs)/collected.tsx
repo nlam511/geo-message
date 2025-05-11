@@ -8,7 +8,6 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { uncollectMessage } from '@/api/messages';
 
 
-
 export default function CollectedScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
@@ -133,7 +132,6 @@ export default function CollectedScreen() {
                                 onPress={async () => {
                                     const uncollectResult = await uncollectMessage(selectedMessage.id);
                                     if (uncollectResult.status === "success") {
-                                        Alert.alert("Uncollected", "Message removed from your collection.");
                                         setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
                                         setSelectedMessage(null);
                                     } else {

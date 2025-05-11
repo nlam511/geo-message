@@ -61,7 +61,6 @@ export default function HomeScreen() {
       console.log("📬 Response:", response.status, data);
 
       if (response.ok) {
-        Alert.alert('✅ Message dropped!');
         setMessage('');
         Keyboard.dismiss();
       } else {

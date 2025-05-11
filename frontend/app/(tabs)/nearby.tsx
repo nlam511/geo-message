@@ -36,7 +36,6 @@ export default function NearbyScreen() {
                     );
 
                     if (response.ok) {
-                        Alert.alert("✅ Collected!", "Message successfully collected.");
                         setMessages(prev => prev.filter(msg => msg.id !== item.id));
                     } else {
                         const error = await response.json();
@@ -71,7 +70,6 @@ export default function NearbyScreen() {
                     );
 
                     if (response.ok) {
-                        Alert.alert("🚫 Hidden", "Message will no longer appear.");
                         setMessages((prev) => prev.filter((msg) => msg.id !== item.id));
                     } else {
                         const error = await response.json();
@@ -226,7 +224,6 @@ export default function NearbyScreen() {
                                         );
 
                                         if (response.ok) {
-                                            Alert.alert("✅ Collected!", "Message successfully collected.");
                                             setSelectedMessage(null); // ✅ Close modal after success
                                         } else {
                                             const error = await response.json();
@@ -263,7 +260,6 @@ export default function NearbyScreen() {
                                         );
 
                                         if (response.ok) {
-                                            Alert.alert("🚫 Hidden", "Message will no longer appear.");
                                             setSelectedMessage(null); // Close the modal
                                         } else {
                                             const error = await response.json();

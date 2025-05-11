@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, Response, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, asc
 from app.db_session import get_db
 from app.models import Message, CollectedMessage, HiddenMessage
 from datetime import datetime
@@ -175,7 +175,7 @@ def get_collected_messages(
         db.query(CollectedMessage)
         .join(Message)
         .filter(CollectedMessage.user_id == current_user.id)
-        .order_by(desc(CollectedMessage.collected_at))
+        .order_by(asc(CollectedMessage.collected_at))
         .all()
     )
 

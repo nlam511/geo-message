@@ -52,7 +52,12 @@ export default function HomeScreen() {
         }),
       });
 
-      const data = await response.json();
+
+      let data = null;
+      if (response.status !== 204) {
+        data = await response.json();
+      }
+
       console.log("📬 Response:", response.status, data);
 
       if (response.ok) {
@@ -60,7 +65,7 @@ export default function HomeScreen() {
         setMessage('');
         Keyboard.dismiss();
       } else {
-        Alert.alert('❌ Failed to drop message', data.detail || 'Unknown error');
+        Alert.alert('❌ Failed to drop message', data?.detail || 'Unknown error');
       }
     } catch (error) {
       console.error(error);

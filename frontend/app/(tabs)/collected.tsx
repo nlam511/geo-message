@@ -4,10 +4,33 @@ import { View, Text, FlatList, StyleSheet, Alert, TouchableOpacity, Modal } from
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Swipeable } from 'react-native-gesture-handler';
+import { uncollectMessage } from '@/api/messages';
+
+
 
 export default function CollectedScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
+
+
+    // ✅ Add the swipe render functions here
+    const renderRightActions = (item: any) => (
+        <TouchableOpacity
+            style={[styles.swipeAction, styles.uncollectSwipe]}
+            onPress={async () => {
+                const uncollectResult =  await uncollectMessage(item.id);
+                if (uncollectResult.status === "success") {
+                    setMessages(prev => prev.filter(msg => msg.id !== item.id));
+                  } else {
+                    Alert.alert("Error", uncollectResult.message);
+                  }
+            }}
+        >
+            <Text style={styles.swipeText}>Uncollect</Text>
+        </TouchableOpacity>
+    );
+
 
     useFocusEffect(
         useCallback(() => {
@@ -64,12 +87,15 @@ export default function CollectedScreen() {
                     data={messages}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => setSelectedMessage(item)}>
-                            <View style={styles.messageBox}>
-                                <Text style={styles.messageText}>{item.text}</Text>
-                                <Text style={styles.meta}>🕓 Collected: {new Date(item.collected_at).toLocaleString()}</Text>
-                            </View>
-                        </TouchableOpacity>
+                        <Swipeable
+                            renderRightActions={() => renderRightActions(item)}>
+                            <TouchableOpacity onPress={() => setSelectedMessage(item)}>
+                                <View style={styles.messageBox}>
+                                    <Text style={styles.messageText}>{item.text}</Text>
+                                    <Text style={styles.meta}>🕓 Collected: {new Date(item.collected_at).toLocaleString()}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </Swipeable>
                     )}
                     ListEmptyComponent={<Text style={styles.empty}>No messages collected yet.</Text>}
                 />
@@ -199,5 +225,17 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 16,
     },
-
+    swipeAction: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 100,
+        height: '100%',
+    },
+    swipeText: {
+        color: 'white',
+        fontWeight: '600',
+    },
+    uncollectSwipe: {
+        backgroundColor: '#007AFF',
+    },
 });

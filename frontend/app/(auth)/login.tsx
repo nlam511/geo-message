@@ -5,7 +5,6 @@ import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 
 export default function LoginScreen() {
-  console.log("✅ login.tsx rendered from (auth) folder"); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();

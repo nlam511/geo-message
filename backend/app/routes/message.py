@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException, Respond, status
+from fastapi import APIRouter, Depends, Query, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.db_session import get_db
@@ -128,7 +128,7 @@ def uncollect_message(
     # Get the collected message
     collected_msg = (
         db.query(CollectedMessage)
-        .filter(CollectedMessage.id == message_id)
+        .filter(CollectedMessage.message_id == message_id)
         .filter(CollectedMessage.user_id == current_user.id)
         .first()
      )

@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Key
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
+import * as Haptics from 'expo-haptics';
 
 export default function HomeScreen() {
   const [message, setMessage] = useState('');
@@ -61,6 +62,7 @@ export default function HomeScreen() {
       console.log("📬 Response:", response.status, data);
 
       if (response.ok) {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         setMessage('');
         Keyboard.dismiss();
       } else {

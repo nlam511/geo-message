@@ -7,6 +7,8 @@ import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
 import { collectMessage, hideMessage } from '@/api/messages';
+import * as Haptics from 'expo-haptics';
+
 
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
@@ -20,6 +22,7 @@ export default function NearbyScreen() {
             onPress={async () => {
                 const collectResult = await collectMessage(item.id);
                 if (collectResult.status === "success") {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                     setMessages(prev => prev.filter(msg => msg.id !== item.id));
                 } else {
                     Alert.alert("Error", collectResult.message);
@@ -38,6 +41,7 @@ export default function NearbyScreen() {
             onPress={async () => {
                 const hideResult = await hideMessage(item.id);
                 if (hideResult.status == "success") {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                     setMessages(prev => prev.filter(msg => msg.id !== item.id));
                 }else {
                     Alert.alert("Error", hideResult.message);
@@ -171,6 +175,7 @@ export default function NearbyScreen() {
                                 onPress={async () => {
                                     const collectResult = await collectMessage(selectedMessage.id);
                                     if (collectResult.status === "success") {
+                                        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                                         setSelectedMessage(null); // ✅ Close modal after success
                                     } else {
                                         Alert.alert("Error", collectResult.message);

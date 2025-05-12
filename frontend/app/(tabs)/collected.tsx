@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
 import { uncollectMessage } from '@/api/messages';
+import * as Haptics from 'expo-haptics';
 
 
 export default function CollectedScreen() {
@@ -20,6 +21,7 @@ export default function CollectedScreen() {
             onPress={async () => {
                 const uncollectResult = await uncollectMessage(item.id);
                 if (uncollectResult.status === "success") {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                     setMessages(prev => prev.filter(msg => msg.id !== item.id));
                 } else {
                     Alert.alert("Error", uncollectResult.message);
@@ -132,6 +134,7 @@ export default function CollectedScreen() {
                                 onPress={async () => {
                                     const uncollectResult = await uncollectMessage(selectedMessage.id);
                                     if (uncollectResult.status === "success") {
+                                        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                                         setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
                                         setSelectedMessage(null);
                                     } else {

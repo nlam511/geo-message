@@ -9,6 +9,50 @@ type APIResponse =
     | { status: 'network_error'; message: string };
 
 
+
+export async function collectMessage(message_id: string): Promise<APIResponse> {
+    try {
+        console.log(`[Collect] Attempting to collect message ${message_id}`);
+        const token = await SecureStore.getItemAsync("user_token");
+        if (!token) {
+            console.warn("[Collect] No token found – user not logged in.");
+            return {
+                status: "unauthorized",
+                message: "You must be logged in to perform this action.",
+            };
+        }
+
+        const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+        const response = await fetch(`${backendUrl}/message/${message_id}/collect`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (response.ok) {
+            console.log("[Collect] Message collected successfully.");
+            return { status: "success" };
+        } else {
+            const error = await response.json();
+            console.error("[Collect] Server error:", error);
+            return {
+                status: "server_error",
+                message: error.detail || "Failed to collect message.",
+            };
+        }
+    } catch (err) {
+        console.error("[Collect] Network error:", err);
+        return {
+            status: "network_error",
+            message: "Something went wrong while connecting to the server.",
+        };
+    }
+}
+
+
+
 export async function uncollectMessage(message_id: string): Promise<APIResponse> {
     try {
         console.log(`[Uncollect] Attempting to uncollect message ${message_id}`);

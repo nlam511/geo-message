@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
+import { collectMessage } from '@/api/messages';
 
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
@@ -16,35 +17,14 @@ export default function NearbyScreen() {
         <TouchableOpacity
             style={[styles.swipeAction, styles.hideSwipe]}
             onPress={async () => {
-                try {
-                    const token = await SecureStore.getItemAsync("user_token");
-                    if (!token) {
-                        Alert.alert("Not logged in", "Please log in to collect messages.");
-                        return;
-                    }
-
-                    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-                    const response = await fetch(
-                        `${backendUrl}/message/${item.id}/collect`,
-                        {
-                            method: "POST",
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                                "Content-Type": "application/json",
-                            },
-                        }
-                    );
-
-                    if (response.ok) {
-                        setMessages(prev => prev.filter(msg => msg.id !== item.id));
-                    } else {
-                        const error = await response.json();
-                        Alert.alert("❌ Failed", error.detail || "Could not collect message.");
-                    }
-                } catch (error) {
-                    console.error(error);
-                    Alert.alert("❌ Error", "Something went wrong.");
+                const collectResult = await collectMessage(item.id);
+                if (collectResult.status === "success") {
+                    setMessages(prev => prev.filter(msg => msg.id !== item.id));
+                } else {
+                    Alert.alert("Error", collectResult.message);
                 }
+
+                setMessages(prev => prev.filter(msg => msg.id !== item.id));
             }}
         >
             <Text style={styles.swipeText}>Collect</Text>
@@ -204,35 +184,13 @@ export default function NearbyScreen() {
                             <TouchableOpacity
                                 style={styles.collectButton}
                                 onPress={async () => {
-                                    try {
-                                        const token = await SecureStore.getItemAsync("user_token");
-                                        if (!token) {
-                                            Alert.alert("Not logged in", "Please log in to collect messages.");
-                                            return;
-                                        }
-
-                                        const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-                                        const response = await fetch(
-                                            `${backendUrl}/message/${selectedMessage.id}/collect`,
-                                            {
-                                                method: "POST",
-                                                headers: {
-                                                    Authorization: `Bearer ${token}`,
-                                                    "Content-Type": "application/json",
-                                                },
-                                            }
-                                        );
-
-                                        if (response.ok) {
-                                            setSelectedMessage(null); // ✅ Close modal after success
-                                        } else {
-                                            const error = await response.json();
-                                            Alert.alert("❌ Failed", error.detail || "Could not collect message.");
-                                        }
-                                    } catch (error) {
-                                        console.error(error);
-                                        Alert.alert("❌ Error", "Something went wrong.");
+                                    const collectResult = await collectMessage(selectedMessage.id);
+                                    if (collectResult.status === "success") {
+                                        setSelectedMessage(null); // ✅ Close modal after success
+                                    } else {
+                                        Alert.alert("Error", collectResult.message);
                                     }
+
                                 }}
                             >
                                 <Text style={styles.collectButtonText}>Collect</Text>

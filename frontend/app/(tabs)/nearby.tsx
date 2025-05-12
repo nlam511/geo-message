@@ -6,11 +6,12 @@ import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
-import { collectMessage } from '@/api/messages';
+import { collectMessage, hideMessage } from '@/api/messages';
 
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
+    const [isSwiping, setIsSwiping] = useState(false);
 
     // ✅ Add the swipe render functions here
     const renderRightActions = (item: any) => (
@@ -35,29 +36,11 @@ export default function NearbyScreen() {
         <TouchableOpacity
             style={[styles.swipeAction, styles.hideSwipe]}
             onPress={async () => {
-                try {
-                    const token = await SecureStore.getItemAsync("user_token");
-                    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-                    const response = await fetch(
-                        `${backendUrl}/message/${item.id}/hide`,
-                        {
-                            method: "POST",
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                                "Content-Type": "application/json",
-                            },
-                        }
-                    );
-
-                    if (response.ok) {
-                        setMessages((prev) => prev.filter((msg) => msg.id !== item.id));
-                    } else {
-                        const error = await response.json();
-                        Alert.alert("❌ Failed", error.detail || "Hiding message failed.");
-                    }
-                } catch (error) {
-                    console.error(error);
-                    Alert.alert("❌ Error", "Something went wrong.");
+                const hideResult = await hideMessage(item.id);
+                if (hideResult.status == "success") {
+                    setMessages(prev => prev.filter(msg => msg.id !== item.id));
+                }else {
+                    Alert.alert("Error", hideResult.message);
                 }
             }}
         >
@@ -105,7 +88,7 @@ export default function NearbyScreen() {
                     setMessages(data);
                     console.log("🚨 Polled Nearby Messages");
                 } catch (error) {
-                    console.error(error);
+                    console.error("Error Polling Nearby Messages: ", error);
                     Alert.alert('Could not fetch nearby messages.');
                 }
             };
@@ -115,14 +98,14 @@ export default function NearbyScreen() {
 
             // Start interval if modal is not open
             intervalId = setInterval(() => {
-                if (!selectedMessage) {
+                if (!selectedMessage && !isSwiping) {
                     fetchNearbyMessages();
                 }
             }, 5000);
 
             // Cleanup
             return () => clearInterval(intervalId);
-        }, [selectedMessage])
+        }, [selectedMessage, isSwiping])
     );
 
     return (
@@ -141,6 +124,8 @@ export default function NearbyScreen() {
                         <Swipeable
                             renderLeftActions={() => renderLeftActions(item)}
                             renderRightActions={() => renderRightActions(item)}
+                            onSwipeableWillOpen={() => setIsSwiping(true)}
+                            onSwipeableClose={() => setIsSwiping(false)}
                         >
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                                 <View style={styles.messageBox}>

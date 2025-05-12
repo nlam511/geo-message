@@ -93,3 +93,45 @@ export async function uncollectMessage(message_id: string): Promise<APIResponse>
         };
     }
 }
+
+
+export async function hideMessage(message_id: string): Promise<APIResponse> {
+    try {
+        console.log(`[Hide] Attempting to uncollect message ${message_id}`);
+        const token = await SecureStore.getItemAsync("user_token");
+        if (!token) {
+            console.warn("[Hide] No token found – user not logged in.");
+            return {
+                status: "unauthorized",
+                message: "You must be logged in to perform this action.",
+            };
+        }
+
+        const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+        const response = await fetch(`${backendUrl}/message/${message_id}/hide`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (response.ok) {
+            console.log("[Hide] Message hidden successfully.");
+            return { status: "success" };
+        } else {
+            const error = await response.json();
+            console.error("[Hide] Server error:", error);
+            return {
+                status: "server_error",
+                message: error.detail || "Failed to uncollect message.",
+            };
+        }
+    } catch (err) {
+        console.error("[Hide] Network error:", err);
+        return {
+            status: "network_error",
+            message: "Something went wrong while connecting to the server.",
+        };
+    }
+}

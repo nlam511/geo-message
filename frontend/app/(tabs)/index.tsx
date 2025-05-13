@@ -4,25 +4,12 @@ import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
+import { dropMessage } from '@/api/messages';
 
 export default function HomeScreen() {
   const [message, setMessage] = useState('');
 
   const handleDropMessage = async () => {
-    if (!message.trim()) {
-      Alert.alert("Enter a message before dropping!");
-      return;
-    }
-    console.log("Message:", message);
-    // 1. Ask for location permission
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    console.log("🔐 Location permission status:", status);
-    if (status !== 'granted') {
-      Alert.alert('Permission denied', 'We need location permission to drop a message.');
-      return;
-    }
-
-
     // 🔐 Get the token from secure storage
     const token = await SecureStore.getItemAsync("user_token");
     if (!token) {
@@ -30,47 +17,27 @@ export default function HomeScreen() {
       return;
     }
 
+    // Ask for location permission
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    console.log("🔐 Location permission status:", status);
+    if (status !== 'granted') {
+      Alert.alert('Permission denied', 'We need location permission to drop a message.');
+      return;
+    }
 
-    // 2. Get current location
+    // Get current location
     const curr_location = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = curr_location.coords;
     console.log("📍 Location:", latitude, longitude);
 
-    // 3. Send POST to backend
-    try {
-      const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-      console.log("🌐 Sending request to:", backendUrl);
-      const response = await fetch(`${backendUrl}/message/drop`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          text: message,
-          latitude,
-          longitude,
-        }),
-      });
-
-
-      let data = null;
-      if (response.status !== 204) {
-        data = await response.json();
-      }
-
-      console.log("📬 Response:", response.status, data);
-
-      if (response.ok) {
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        setMessage('');
-        Keyboard.dismiss();
-      } else {
-        Alert.alert('❌ Failed to drop message', data?.detail || 'Unknown error');
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert('❌ Error', 'Could not connect to the server.');
+    // Drop message
+    const dropResult = await dropMessage(message, {latitude, longitude});
+    if (dropResult.status === "success") {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setMessage('');
+      Keyboard.dismiss();
+    } else {
+      Alert.alert("Error", dropResult.message);
     }
   };
 

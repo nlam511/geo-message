@@ -135,3 +135,55 @@ export async function hideMessage(message_id: string): Promise<APIResponse> {
         };
     }
 }
+
+export async function dropMessage(
+    message_text: string,
+    coords: { latitude: number; longitude: number }
+  ): Promise<APIResponse> {
+    const token = await SecureStore.getItemAsync("user_token");
+    if (!token) {
+      return {
+        status: "unauthorized",
+        message: "You must be logged in to perform this action.",
+      };
+    }
+  
+    if (!message_text.trim()) {
+      return {
+        status: "unauthorized",
+        message: "You cannot drop an empty message.",
+      };
+    }
+  
+    try {
+      const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+      const response = await fetch(`${backendUrl}/message/drop`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: message_text,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        }),
+      });
+  
+      if (response.ok) {
+        return { status: "success" };
+      } else {
+        const error = await response.json();
+        return {
+          status: "server_error",
+          message: error.detail || "Failed to drop message.",
+        };
+      }
+    } catch (err) {
+      console.error("[Drop] Network error:", err);
+      return {
+        status: "network_error",
+        message: "Could not connect to the server.",
+      };
+    }
+  }

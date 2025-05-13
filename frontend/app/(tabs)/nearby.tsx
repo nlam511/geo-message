@@ -86,6 +86,8 @@ export default function NearbyScreen() {
                         longitudeDelta: 0.01,
                     });
 
+                    console.log("🗺️ Region state:", region);
+
                     const backendUrl = Constants.expoConfig?.extra?.backendUrl;
                     const response = await fetch(
                         `${backendUrl}/message/nearby?latitude=${latitude}&longitude=${longitude}`,
@@ -124,29 +126,28 @@ export default function NearbyScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
             <View style={styles.topHalf}>
-                <View style={styles.topHalf}>
-                    {region ? (
-                        <MapView
-                            provider={PROVIDER_GOOGLE}
-                            style={styles.mapView}
-                            region={region}
-                            showsUserLocation
-                        >
-                            {messages.map((msg) => (
-                                <Marker
-                                    key={msg.id}
-                                    coordinate={{ latitude: msg.latitude, longitude: msg.longitude }}
-                                    title={msg.text}
-                                    onPress={() => setSelectedMessage(msg)}
-                                />
-                            ))}
-                        </MapView>
-                    ) : (
-                        <View style={[styles.mapView, styles.mapLoading]}>
-                            <Text>Loading map...</Text>
-                        </View>
-                    )}
-                </View>
+                {region ? (
+                    <MapView
+                        provider={PROVIDER_GOOGLE}
+                        style={styles.mapView}
+                        initialRegion={region}
+                        // region={region}
+                        showsUserLocation
+                    >
+                        {messages.map((msg) => (
+                            <Marker
+                                key={msg.id}
+                                coordinate={{ latitude: msg.latitude, longitude: msg.longitude }}
+                                title={msg.text}
+                                onPress={() => setSelectedMessage(msg)}
+                            />
+                        ))}
+                    </MapView>
+                ) : (
+                    <View style={[styles.mapView, styles.mapLoading]}>
+                        <Text>Loading map...</Text>
+                    </View>
+                )}
             </View>
             <View style={styles.bottomHalf}>
                 <FlatList
@@ -395,6 +396,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     mapView: {
+        flex: 1,
         width: '100%',
         height: '100%',
     },

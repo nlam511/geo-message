@@ -8,12 +8,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
 import { collectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
 
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
     const [isSwiping, setIsSwiping] = useState(false);
+    const [region, setRegion] = useState<Region | null>(null);
 
     // ✅ Add the swipe render functions here
     const renderRightActions = (item: any) => (
@@ -43,7 +45,7 @@ export default function NearbyScreen() {
                 if (hideResult.status == "success") {
                     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                     setMessages(prev => prev.filter(msg => msg.id !== item.id));
-                }else {
+                } else {
                     Alert.alert("Error", hideResult.message);
                 }
             }}
@@ -76,6 +78,13 @@ export default function NearbyScreen() {
 
                     const location = await Location.getCurrentPositionAsync({});
                     const { latitude, longitude } = location.coords;
+
+                    setRegion({
+                        latitude,
+                        longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                    });
 
                     const backendUrl = Constants.expoConfig?.extra?.backendUrl;
                     const response = await fetch(
@@ -115,10 +124,29 @@ export default function NearbyScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
             <View style={styles.topHalf}>
-                <Image
-                    source={require('../../assets/images/map-placeholder.png')}
-                    style={styles.mapImage}
-                />
+                <View style={styles.topHalf}>
+                    {region ? (
+                        <MapView
+                            provider={PROVIDER_GOOGLE}
+                            style={styles.mapView}
+                            region={region}
+                            showsUserLocation
+                        >
+                            {messages.map((msg) => (
+                                <Marker
+                                    key={msg.id}
+                                    coordinate={{ latitude: msg.latitude, longitude: msg.longitude }}
+                                    title={msg.text}
+                                    onPress={() => setSelectedMessage(msg)}
+                                />
+                            ))}
+                        </MapView>
+                    ) : (
+                        <View style={[styles.mapView, styles.mapLoading]}>
+                            <Text>Loading map...</Text>
+                        </View>
+                    )}
+                </View>
             </View>
             <View style={styles.bottomHalf}>
                 <FlatList
@@ -273,9 +301,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
     },
     mapImage: {
-        width: '95%',
-        height: '95%',
-        borderRadius: 30,
+        width: '100%',
+        height: '100%',
     },
     bottomHalf: {
         flex: 1,
@@ -366,6 +393,14 @@ const styles = StyleSheet.create({
     swipeText: {
         color: 'white',
         fontWeight: '600',
+    },
+    mapView: {
+        width: '100%',
+        height: '100%',
+    },
+    mapLoading: {
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 
 });

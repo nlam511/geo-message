@@ -8,76 +8,66 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { uncollectMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
 
-
 export default function CollectedScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
 
+    const fetchCollectedMessages = useCallback(async () => {
+        try {
+            if (selectedMessage) return;
 
-    // ✅ Add the swipe render functions here
+            const token = await SecureStore.getItemAsync('user_token');
+            if (!token) {
+                Alert.alert('Not logged in', 'Please log in to see your collected messages.');
+                return;
+            }
+
+            const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+            const response = await fetch(`${backendUrl}/message/collected`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            setMessages(data);
+            console.log('✅ Refreshed collected messages');
+        } catch (err) {
+            console.error(err);
+            Alert.alert('Error', 'Could not load collected messages.');
+        }
+    }, [selectedMessage]);
+
+    const handleManualRefresh = async () => {
+        setRefreshing(true);
+        await fetchCollectedMessages();
+        setRefreshing(false);
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+          fetchCollectedMessages(); // Run once when screen comes into focus
+        }, [fetchCollectedMessages])
+      );
+      
+
     const renderRightActions = (item: any) => (
         <TouchableOpacity
             style={[styles.swipeAction, styles.uncollectSwipe]}
             onPress={async () => {
                 const uncollectResult = await uncollectMessage(item.id);
-                if (uncollectResult.status === "success") {
+                if (uncollectResult.status === 'success') {
                     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                     setMessages(prev => prev.filter(msg => msg.id !== item.id));
                 } else {
-                    Alert.alert("Error", uncollectResult.message);
+                    Alert.alert('Error', uncollectResult.message);
                 }
             }}
         >
             <Text style={styles.swipeText}>Uncollect</Text>
         </TouchableOpacity>
-    );
-
-
-    useFocusEffect(
-        useCallback(() => {
-            let intervalId: ReturnType<typeof setInterval>;
-
-            const fetchCollectedMessages = async () => {
-                try {
-                    // Skip polling if modal is open
-                    if (selectedMessage) return;
-
-                    const token = await SecureStore.getItemAsync("user_token");
-                    if (!token) {
-                        Alert.alert("Not logged in", "Please log in to see your collected messages.");
-                        return;
-                    }
-
-                    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-                    const response = await fetch(`${backendUrl}/message/collected`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            "Content-Type": "application/json",
-                        },
-                    });
-
-                    const data = await response.json();
-                    setMessages(data);
-                    console.log("🚨 Polled Collected Messages");
-                } catch (err) {
-                    console.error(err);
-                    Alert.alert("Error", "Could not load collected messages.");
-                }
-            };
-
-            fetchCollectedMessages();
-
-
-            // Start interval if modal is not open
-            intervalId = setInterval(() => {
-                if (!selectedMessage) {
-                    fetchCollectedMessages();
-                }
-            }, 5000);
-
-            // Cleanup on unmount
-            return () => clearInterval(intervalId);
-        }, [selectedMessage])
     );
 
     return (
@@ -88,17 +78,20 @@ export default function CollectedScreen() {
                     data={messages}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                        <Swipeable
-                            renderRightActions={() => renderRightActions(item)}>
+                        <Swipeable renderRightActions={() => renderRightActions(item)}>
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                                 <View style={styles.messageBox}>
                                     <Text style={styles.messageText}>{item.text}</Text>
-                                    <Text style={styles.meta}>🕓 Collected: {new Date(item.collected_at).toLocaleString()}</Text>
+                                    <Text style={styles.meta}>
+                                        🕓 Collected: {new Date(item.collected_at).toLocaleString()}
+                                    </Text>
                                 </View>
                             </TouchableOpacity>
                         </Swipeable>
                     )}
                     ListEmptyComponent={<Text style={styles.empty}>No messages collected yet.</Text>}
+                    refreshing={refreshing}
+                    onRefresh={handleManualRefresh}
                 />
             </View>
 
@@ -128,30 +121,26 @@ export default function CollectedScreen() {
                                 📍 Lat: {selectedMessage.latitude}, Lng: {selectedMessage.longitude}
                             </Text>
 
-
                             <TouchableOpacity
                                 style={styles.uncollectButton}
                                 onPress={async () => {
                                     const uncollectResult = await uncollectMessage(selectedMessage.id);
-                                    if (uncollectResult.status === "success") {
+                                    if (uncollectResult.status === 'success') {
                                         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                                         setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
                                         setSelectedMessage(null);
                                     } else {
-                                        Alert.alert("Error", uncollectResult.message);
+                                        Alert.alert('Error', uncollectResult.message);
                                     }
                                 }}
                             >
                                 <Text style={styles.uncollectButtonText}>Uncollect</Text>
                             </TouchableOpacity>
-
                         </View>
                     </TouchableOpacity>
                 </Modal>
             )}
         </SafeAreaView>
-
-
     );
 }
 

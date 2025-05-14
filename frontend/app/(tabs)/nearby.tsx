@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, StyleSheet, FlatList, Alert, Image, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, TouchableOpacity, Modal } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
@@ -10,28 +10,75 @@ import { collectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
-
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
     const [isSwiping, setIsSwiping] = useState(false);
     const [region, setRegion] = useState<Region | null>(null);
 
-    // ✅ Add the swipe render functions here
+    const refreshMessages = useCallback(async () => {
+        try {
+            const token = await SecureStore.getItemAsync("user_token");
+            if (!token) {
+                Alert.alert("❌ You must be logged in to get nearby messages.");
+                return;
+            }
+
+            const location = await Location.getCurrentPositionAsync({});
+            const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+            const response = await fetch(
+                `${backendUrl}/message/nearby?latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const data = await response.json();
+            setMessages(data);
+
+            setRegion({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.002,
+                longitudeDelta: 0.002,
+            });
+
+        } catch (error) {
+            console.error("Error refreshing messages:", error);
+            Alert.alert("❌ Failed to refresh messages.");
+        }
+    }, []);
+
+    const handleCollect = async (id: string) => {
+        const result = await collectMessage(id);
+        if (result.status === "success") {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            await refreshMessages();
+            setSelectedMessage(null);
+        } else {
+            Alert.alert("❌ Collect Failed", result.message);
+        }
+    };
+
+    const handleHide = async (id: string) => {
+        const result = await hideMessage(id);
+        if (result.status === "success") {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            await refreshMessages();
+            setSelectedMessage(null);
+        } else {
+            Alert.alert("❌ Hide Failed", result.message);
+        }
+    };
+
     const renderRightActions = (item: any) => (
         <TouchableOpacity
-            style={[styles.swipeAction, styles.hideSwipe]}
-            onPress={async () => {
-                const collectResult = await collectMessage(item.id);
-                if (collectResult.status === "success") {
-                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                    setMessages(prev => prev.filter(msg => msg.id !== item.id));
-                } else {
-                    Alert.alert("Error", collectResult.message);
-                }
-
-                setMessages(prev => prev.filter(msg => msg.id !== item.id));
-            }}
+            style={[styles.swipeAction, styles.collectSwipe]}
+            onPress={() => handleCollect(item.id)}
         >
             <Text style={styles.swipeText}>Collect</Text>
         </TouchableOpacity>
@@ -40,87 +87,27 @@ export default function NearbyScreen() {
     const renderLeftActions = (item: any) => (
         <TouchableOpacity
             style={[styles.swipeAction, styles.hideSwipe]}
-            onPress={async () => {
-                const hideResult = await hideMessage(item.id);
-                if (hideResult.status == "success") {
-                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                    setMessages(prev => prev.filter(msg => msg.id !== item.id));
-                } else {
-                    Alert.alert("Error", hideResult.message);
-                }
-            }}
+            onPress={() => handleHide(item.id)}
         >
             <Text style={styles.swipeText}>Hide</Text>
         </TouchableOpacity>
     );
 
-
     useFocusEffect(
         useCallback(() => {
-            let intervalId: ReturnType<typeof setInterval>;
+            let timeoutId: ReturnType<typeof setTimeout>;
 
-            const fetchNearbyMessages = async () => {
-                // Skip polling if modal is open
-                if (selectedMessage) return;
-
-                try {
-                    const { status } = await Location.requestForegroundPermissionsAsync();
-                    if (status !== 'granted') {
-                        Alert.alert('Location permission is required to find nearby messages.');
-                        return;
-                    }
-
-                    const token = await SecureStore.getItemAsync("user_token");
-                    if (!token) {
-                        Alert.alert("❌ You must be logged in to get nearby messages.");
-                        return;
-                    }
-
-                    const location = await Location.getCurrentPositionAsync({});
-                    const { latitude, longitude } = location.coords;
-
-                    setRegion({
-                        latitude,
-                        longitude,
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.01,
-                    });
-
-                    console.log("🗺️ Region state:", region);
-
-                    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-                    const response = await fetch(
-                        `${backendUrl}/message/nearby?latitude=${latitude}&longitude=${longitude}`,
-                        {
-                            method: "GET",
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                                "Content-Type": "application/json",
-                            },
-                        }
-                    );
-                    const data = await response.json();
-                    setMessages(data);
-                    console.log("🚨 Polled Nearby Messages");
-                } catch (error) {
-                    console.error("Error Polling Nearby Messages: ", error);
-                    Alert.alert('Could not fetch nearby messages.');
+            const poll = async () => {
+                if (!selectedMessage && !isSwiping) {
+                    await refreshMessages();
                 }
+                timeoutId = setTimeout(poll, 5000);
             };
 
-            // Run once immediately
-            fetchNearbyMessages();
+            poll();
 
-            // Start interval if modal is not open
-            intervalId = setInterval(() => {
-                if (!selectedMessage && !isSwiping) {
-                    fetchNearbyMessages();
-                }
-            }, 5000);
-
-            // Cleanup
-            return () => clearInterval(intervalId);
-        }, [selectedMessage, isSwiping])
+            return () => clearTimeout(timeoutId);
+        }, [refreshMessages, selectedMessage, isSwiping])
     );
 
     return (
@@ -130,16 +117,19 @@ export default function NearbyScreen() {
                     <MapView
                         provider={PROVIDER_GOOGLE}
                         style={styles.mapView}
-                        initialRegion={region}
-                        // region={region}
+                        region={region}
                         showsUserLocation
+                        scrollEnabled={false}
+                        zoomEnabled={false}
+                        rotateEnabled={false}
+                        pitchEnabled={false}
                     >
                         {messages.map((msg) => (
                             <Marker
                                 key={msg.id}
                                 coordinate={{ latitude: msg.latitude, longitude: msg.longitude }}
-                                title={msg.text}
                                 onPress={() => setSelectedMessage(msg)}
+                                pinColor={selectedMessage?.id === msg.id ? 'blue' : 'red'}
                             />
                         ))}
                     </MapView>
@@ -149,6 +139,7 @@ export default function NearbyScreen() {
                     </View>
                 )}
             </View>
+
             <View style={styles.bottomHalf}>
                 <FlatList
                     data={messages}
@@ -171,7 +162,6 @@ export default function NearbyScreen() {
                     ListEmptyComponent={<Text style={styles.empty}>No messages nearby.</Text>}
                 />
             </View>
-
 
             {selectedMessage && (
                 <Modal
@@ -201,52 +191,14 @@ export default function NearbyScreen() {
 
                             <TouchableOpacity
                                 style={styles.collectButton}
-                                onPress={async () => {
-                                    const collectResult = await collectMessage(selectedMessage.id);
-                                    if (collectResult.status === "success") {
-                                        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                                        setSelectedMessage(null); // ✅ Close modal after success
-                                    } else {
-                                        Alert.alert("Error", collectResult.message);
-                                    }
-
-                                }}
+                                onPress={() => handleCollect(selectedMessage.id)}
                             >
                                 <Text style={styles.collectButtonText}>Collect</Text>
                             </TouchableOpacity>
+
                             <TouchableOpacity
                                 style={styles.hideButton}
-                                onPress={async () => {
-                                    try {
-                                        const token = await SecureStore.getItemAsync("user_token");
-                                        if (!token) {
-                                            Alert.alert("Not logged in", "Please log in to hide messages.");
-                                            return;
-                                        }
-
-                                        const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-                                        const response = await fetch(
-                                            `${backendUrl}/message/${selectedMessage.id}/hide`,
-                                            {
-                                                method: "POST",
-                                                headers: {
-                                                    Authorization: `Bearer ${token}`,
-                                                    "Content-Type": "application/json",
-                                                },
-                                            }
-                                        );
-
-                                        if (response.ok) {
-                                            setSelectedMessage(null); // Close the modal
-                                        } else {
-                                            const error = await response.json();
-                                            Alert.alert("❌ Failed", error.detail || "Hiding message failed.");
-                                        }
-                                    } catch (error) {
-                                        console.error(error);
-                                        Alert.alert("❌ Error", "Something went wrong.");
-                                    }
-                                }}
+                                onPress={() => handleHide(selectedMessage.id)}
                             >
                                 <Text style={styles.hideButtonText}>Hide</Text>
                             </TouchableOpacity>
@@ -256,153 +208,32 @@ export default function NearbyScreen() {
             )}
         </SafeAreaView>
     );
-
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: 'white',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: '600',
-        textAlign: 'center',
-        marginBottom: 16,
-        color: 'black',
-    },
-    messageBox: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 12,
-        backgroundColor: '#f9f9f9',
-    },
-    messageText: {
-        fontSize: 16,
-        marginBottom: 4,
-    },
-    meta: {
-        fontSize: 12,
-
-        color: 'gray',
-    },
-    empty: {
-        textAlign: 'center',
-        marginTop: 40,
-        fontSize: 16,
-        color: 'gray',
-    },
-    topHalf: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'white',
-    },
-    mapImage: {
-        width: '100%',
-        height: '100%',
-    },
-    bottomHalf: {
-        flex: 1,
-        backgroundColor: 'white',
-        paddingHorizontal: 10,
-        paddingBottom: 20,
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContent: {
-        width: '85%',
-        backgroundColor: 'white',
-        borderRadius: 12,
-        padding: 20,
-        alignItems: 'center',
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    modalText: {
-        fontSize: 16,
-        marginBottom: 10,
-    },
-    modalMeta: {
-        fontSize: 14,
-        color: 'gray',
-        marginBottom: 20,
-    },
-    modalCloseIcon: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        zIndex: 10,
-        backgroundColor: '#ff3b30',
-        borderRadius: 12,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-    },
-    modalCloseText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
-    collectButton: {
-        backgroundColor: '#007AFF',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 8,
-    },
-    collectButtonText: {
-        color: 'white',
-        fontWeight: '600',
-        fontSize: 16,
-    },
-    hideButton: {
-        backgroundColor: '#FF3B30',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        marginTop: 10,
-    },
-    hideButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '500',
-        textAlign: 'center',
-    },
-    swipeAction: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: 100,
-        height: '100%',
-    },
-    hideSwipe: {
-        backgroundColor: '#FF3B30',
-    },
-    collectSwipe: {
-        backgroundColor: '#007AFF',
-    },
-
-    swipeText: {
-        color: 'white',
-        fontWeight: '600',
-    },
-    mapView: {
-        flex: 1,
-        width: '100%',
-        height: '100%',
-    },
-    mapLoading: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
+    container: { flex: 1, padding: 20, backgroundColor: 'white' },
+    title: { fontSize: 24, fontWeight: '600', textAlign: 'center', marginBottom: 16, color: 'black' },
+    messageBox: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 12, backgroundColor: '#f9f9f9' },
+    messageText: { fontSize: 16, marginBottom: 4 },
+    meta: { fontSize: 12, color: 'gray' },
+    empty: { textAlign: 'center', marginTop: 40, fontSize: 16, color: 'gray' },
+    topHalf: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' },
+    bottomHalf: { flex: 1, backgroundColor: 'white', paddingHorizontal: 10, paddingBottom: 20 },
+    mapView: { flex: 1, width: '100%', height: '100%' },
+    mapLoading: { justifyContent: 'center', alignItems: 'center' },
+    swipeAction: { justifyContent: 'center', alignItems: 'center', width: 100, height: '100%' },
+    hideSwipe: { backgroundColor: '#FF3B30' },
+    collectSwipe: { backgroundColor: '#007AFF' },
+    swipeText: { color: 'white', fontWeight: '600' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+    modalContent: { width: '85%', backgroundColor: 'white', borderRadius: 12, padding: 20, alignItems: 'center' },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+    modalText: { fontSize: 16, marginBottom: 10 },
+    modalMeta: { fontSize: 14, color: 'gray', marginBottom: 20 },
+    modalCloseIcon: { position: 'absolute', top: 10, right: 10, zIndex: 10, backgroundColor: '#ff3b30', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
+    modalCloseText: { color: 'white', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
+    collectButton: { backgroundColor: '#007AFF', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+    collectButtonText: { color: 'white', fontWeight: '600', fontSize: 16 },
+    hideButton: { backgroundColor: '#FF3B30', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, marginTop: 10 },
+    hideButtonText: { color: 'white', fontSize: 16, fontWeight: '500', textAlign: 'center' },
 });

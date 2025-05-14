@@ -81,13 +81,14 @@ function DropMessageButton({ onPress, accessibilityState }: any) {
 
 const styles = StyleSheet.create({
   dropButtonWrapper: {
-    top: -25,
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    bottom: -5,        // ⬇️ Lower = closer to bottom
+    alignSelf: 'center',
+    zIndex: 10,
   },
   circleButton: {
-    width: 60,
-    height: 60,
+    width: 120,
+    height: 70,
     borderRadius: 30,
     backgroundColor: '#007AFF',
     justifyContent: 'center',

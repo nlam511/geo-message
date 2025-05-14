@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -16,37 +16,95 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
-            // Use a transparent background on iOS to show the blur effect
             position: 'absolute',
           },
           default: {},
         }),
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Main',
+          tabBarButton: HapticTab,
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="tray.full.fill" color={color} />
+          ),
         }}
       />
+
+
       <Tabs.Screen
-        name="nearby"
+        name="drop"
         options={{
-          title: 'Nearby',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Drop Message',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="plus" color="white" />
+          ),
+          tabBarButton: (props) => <DropMessageButton {...props} />,
         }}
       />
+
       <Tabs.Screen
         name="collected"
         options={{
           title: 'Collected',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarButton: HapticTab,
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="tray.full.fill" color={color} />
+          ),
         }}
       />
     </Tabs>
   );
 }
+
+// 🟦 Circular center button component
+function DropMessageButton({ onPress, accessibilityState }: any) {
+  const isSelected = accessibilityState?.selected;
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.dropButtonWrapper}
+      activeOpacity={0.9}
+    >
+      <View style={[styles.circleButton, isSelected && styles.circleButtonActive]}>
+        <Text style={styles.dropText}>＋</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  dropButtonWrapper: {
+    top: -25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  circleButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  circleButtonActive: {
+    backgroundColor: '#005BB5',
+  },
+  dropText: {
+    fontSize: 30,
+    color: 'white',
+    fontWeight: 'bold',
+    lineHeight: 32,
+  },
+});

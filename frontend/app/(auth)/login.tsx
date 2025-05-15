@@ -62,6 +62,16 @@ export default function LoginScreen() {
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
+      <View style={styles.linkContainer}>
+        <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+          <Text style={styles.linkText}>Forgot Password?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push('/register')}>
+          <Text style={styles.linkText}>Don't have an account? Register</Text>
+        </TouchableOpacity>
+
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -100,4 +110,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  linkContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+    gap: 10,
+  },
+  linkText: {
+    color: '#007AFF',
+    fontSize: 15,
+  },
+
 });

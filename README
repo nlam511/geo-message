@@ -43,7 +43,6 @@ python -m app.db
 TODOS:
 
 TOP PRIORITY
--- Add An Interactive Map w/ Markers of nearby messages
 -- Implement Refresh Token to front end
 -- Push Notification when someone collects your message.
 -- Add Animation to collect/dismiss message?

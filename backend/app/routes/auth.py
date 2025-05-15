@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db_session import get_db
-from app.models import User, Message, CollectedMessage
+from app.models import User, Message, CollectedMessage, RefreshToken
 from app.utils.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.schemas import UserCreate, LoginRequest, RefreshRequest
 
@@ -58,20 +58,16 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     }
 
 @router.post("/logout")
-def logout(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    #TODO: Make sure you clear the access_token and refresh_token from the front end when you call this
-    # Find the refresh token record
-    token_entry = db.query(RefreshToken).filter_by(
-        token=token,
-        user_id=current_user.id
-    ).first()
+def logout(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    # Find a refresh token for the current user
+    token_entry = db.query(RefreshToken).filter(RefreshToken.user_id == current_user.id).first()
 
-    if not token_entry:
-        raise HTTPException(status_code=404, detail="Refresh token not found")
-
-    # Remove the refresh token
-    db.delete(token_entry)
-    db.commit()
+    if token_entry:
+        db.delete(token_entry)
+        db.commit()
 
     return {"status": "success", "message": "Logged out"}
 

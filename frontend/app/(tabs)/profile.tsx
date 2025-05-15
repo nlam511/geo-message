@@ -44,26 +44,26 @@ export default function ProfileScreen() {
   );
 
   const handleLogout = async () => {
-    const accessToken = await SecureStore.getItemAsync('access_token');
+    const userToken = await SecureStore.getItemAsync('user_token');
     const refreshToken = await SecureStore.getItemAsync('refresh_token');
 
-    if (!accessToken || !refreshToken) {
-      Alert.alert('Missing tokens');
-      return;
-    }
+    // if (!userToken || !refreshToken) {
+    //   Alert.alert('Missing tokens');
+    //   return;
+    // }
 
     try {
       const backendUrl = Constants.expoConfig?.extra?.backendUrl;
       const response = await fetch(`${backendUrl}/auth/logout`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${userToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ token: refreshToken }),
       });
 
-      await SecureStore.deleteItemAsync('access_token');
+      await SecureStore.deleteItemAsync('user_token');
       await SecureStore.deleteItemAsync('refresh_token');
 
       if (!response.ok) {

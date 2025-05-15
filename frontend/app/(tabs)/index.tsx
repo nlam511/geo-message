@@ -8,6 +8,7 @@ import {
     Alert,
     TouchableOpacity,
     Modal,
+    Animated,
 } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
@@ -18,8 +19,9 @@ import { collectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { authFetch } from '@/api/authFetch';
+import { Ionicons } from '@expo/vector-icons';
 
-const REFRESH_INTERVAL_MS = 30000; // 30 seconds
+const REFRESH_INTERVAL_MS = 30000;
 
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
@@ -102,10 +104,91 @@ export default function NearbyScreen() {
             };
 
             poll();
-
             return () => clearTimeout(timeoutId);
         }, [refreshMessages, selectedMessage, isSwiping])
     );
+
+    // Swipe actions with animated icon (Spotify style)
+    const renderLeftActions = (
+        _progress: Animated.AnimatedInterpolation<number>,
+        dragX: Animated.AnimatedInterpolation<number>
+    ) => {
+        const scale = dragX.interpolate({
+            inputRange: [0, 64],
+            outputRange: [0.8, 1.2],
+            extrapolate: 'clamp',
+        });
+
+        const opacity = dragX.interpolate({
+            inputRange: [0, 64],
+            outputRange: [0, 1],
+            extrapolate: 'clamp',
+        });
+
+        const translateX = dragX.interpolate({
+            inputRange: [0, 64],
+            outputRange: [-12, 0],
+            extrapolate: 'clamp',
+        });
+
+        return (
+            <Animated.View style={[styles.swipeIconContainer]}>
+                <Animated.View
+                    style={[
+                        styles.iconBubble,
+                        {
+                            backgroundColor: '#FF3B30',
+                            transform: [{ scale }, { translateX }],
+                            opacity,
+                        },
+                    ]}
+                >
+                    <Ionicons name="eye-off" size={20} color="white" />
+                </Animated.View>
+            </Animated.View>
+        );
+    };
+
+
+    const renderRightActions = (
+        _progress: Animated.AnimatedInterpolation<number>,
+        dragX: Animated.AnimatedInterpolation<number>
+    ) => {
+        const scale = dragX.interpolate({
+            inputRange: [-64, 0],
+            outputRange: [1.2, 0.8],
+            extrapolate: 'clamp',
+        });
+
+        const opacity = dragX.interpolate({
+            inputRange: [-64, 0],
+            outputRange: [1, 0],
+            extrapolate: 'clamp',
+        });
+
+        const translateX = dragX.interpolate({
+            inputRange: [-64, 0],
+            outputRange: [0, 12],
+            extrapolate: 'clamp',
+        });
+
+        return (
+            <Animated.View style={[styles.swipeIconContainer]}>
+                <Animated.View
+                    style={[
+                        styles.iconBubble,
+                        {
+                            backgroundColor: '#007AFF',
+                            transform: [{ scale }, { translateX }],
+                            opacity,
+                        },
+                    ]}
+                >
+                    <Ionicons name="download" size={20} color="white" />
+                </Animated.View>
+            </Animated.View>
+        );
+    };
 
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
@@ -143,22 +226,21 @@ export default function NearbyScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
                         <Swipeable
-                            renderLeftActions={() => <View style={styles.hideSwipe} />}
-                            renderRightActions={() => <View style={styles.collectSwipe} />}
+                            renderLeftActions={renderLeftActions}
+                            renderRightActions={renderRightActions}
                             onSwipeableWillOpen={() => setIsSwiping(true)}
                             onSwipeableClose={() => setIsSwiping(false)}
                             onSwipeableOpen={(direction) => {
-                                if (direction === 'left') {
-                                    handleHide(item.id);
-                                } else if (direction === 'right') {
-                                    handleCollect(item.id);
-                                }
+                                if (direction === 'left') handleHide(item.id);
+                                if (direction === 'right') handleCollect(item.id);
                             }}
                         >
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                                 <View style={styles.messageBox}>
-                                    <Text style={styles.messageText}>{item.text}</Text>
-                                    <Text style={styles.meta}>📍 Lat: {item.latitude}, Lng: {item.longitude}</Text>
+                                    <Text style={styles.messageText}>{String(item.text)}</Text>
+                                    <Text style={styles.meta}>
+                                        📍 Lat: {item.latitude}, Lng: {item.longitude}
+                                    </Text>
                                 </View>
                             </TouchableOpacity>
                         </Swipeable>
@@ -170,12 +252,7 @@ export default function NearbyScreen() {
             </SafeAreaView>
 
             {selectedMessage && (
-                <Modal
-                    visible={true}
-                    animationType="fade"
-                    transparent
-                    onRequestClose={() => setSelectedMessage(null)}
-                >
+                <Modal visible={true} animationType="fade" transparent onRequestClose={() => setSelectedMessage(null)}>
                     <TouchableOpacity
                         style={styles.modalOverlay}
                         activeOpacity={1}
@@ -190,7 +267,7 @@ export default function NearbyScreen() {
                             </TouchableOpacity>
 
                             <Text style={styles.modalTitle}>Message Details</Text>
-                            <Text style={styles.modalText}>{selectedMessage.text}</Text>
+                            <Text style={styles.modalText}>{String(selectedMessage.text)}</Text>
                             <Text style={styles.modalMeta}>
                                 📍 Lat: {selectedMessage.latitude}, Lng: {selectedMessage.longitude}
                             </Text>
@@ -224,6 +301,7 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 12,
         backgroundColor: '#f9f9f9',
+        height: 64
     },
     messageText: { fontSize: 16, marginBottom: 4 },
     meta: { fontSize: 12, color: 'gray' },
@@ -232,10 +310,22 @@ const styles = StyleSheet.create({
     bottomHalf: { flex: 1, backgroundColor: 'white', paddingHorizontal: 10, paddingBottom: 20 },
     mapView: { flex: 1, width: '100%', height: '100%' },
     mapLoading: { justifyContent: 'center', alignItems: 'center' },
-    swipeAction: { justifyContent: 'center', alignItems: 'center', width: 100, height: '100%' },
-    hideSwipe: { backgroundColor: '#FF3B30', flex: 1 },
-    collectSwipe: { backgroundColor: '#007AFF', flex: 1 },
-    swipeText: { color: 'white', fontWeight: '600' },
+    swipeIconContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        height: 64, // same as row height
+        backgroundColor: 'transparent', // no background
+    },
+
+    iconBubble: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
     modalContent: { width: '85%', backgroundColor: 'white', borderRadius: 12, padding: 20, alignItems: 'center' },
     modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },

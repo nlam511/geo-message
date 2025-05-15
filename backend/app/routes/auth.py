@@ -95,3 +95,19 @@ def refresh_token(token: str, db: Session = Depends(get_db)):
     access_token = create_access_token(user)
 
     return {"access_token": access_token}
+
+@router.get("/me")
+def get_user_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    dropped_count = db.query(Message).filter(Message.user_id == current_user.id).count()
+    collected_count = db.query(Message).filter(Message.collected_by == current_user.id).count()
+
+
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "messages_dropped": dropped_count,
+        "messages_collected": collected_count,
+    }

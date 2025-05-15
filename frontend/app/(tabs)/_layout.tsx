@@ -25,13 +25,25 @@ export default function TabLayout() {
         }),
       }}
     >
+
+      <Tabs.Screen
+        name="store"
+        options={{
+          title: 'Store',
+          tabBarButton: HapticTab,
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="cart.fill" color={color} />
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Main',
+          title: 'Nearby',
           tabBarButton: HapticTab,
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="tray.full.fill" color={color} />
+            <IconSymbol size={28} name="map.fill" color={color} />
           ),
         }}
       />
@@ -52,6 +64,17 @@ export default function TabLayout() {
         name="collected"
         options={{
           title: 'Collected',
+          tabBarButton: HapticTab,
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="tray.full.fill" color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
           tabBarButton: HapticTab,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="tray.full.fill" color={color} />
@@ -82,13 +105,13 @@ function DropMessageButton({ onPress, accessibilityState }: any) {
 const styles = StyleSheet.create({
   dropButtonWrapper: {
     position: 'absolute',
-    bottom: -5,        // ⬇️ Lower = closer to bottom
+    bottom: -2,
     alignSelf: 'center',
     zIndex: 10,
   },
   circleButton: {
-    width: 120,
-    height: 70,
+    width: 70,
+    height: 50,
     borderRadius: 30,
     backgroundColor: '#007AFF',
     justifyContent: 'center',

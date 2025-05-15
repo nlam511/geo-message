@@ -117,10 +117,14 @@ export default function NearbyScreen() {
             let timeoutId: ReturnType<typeof setTimeout>;
 
             const poll = async () => {
+                const token = await SecureStore.getItemAsync("user_token");
+                if (!token) return; // ✅ Exit early if not authenticated
+
                 if (!selectedMessage && !isSwiping) {
                     await refreshMessages();
                 }
-                timeoutId = setTimeout(poll, REFRESH_INTERVAL_MS); // 30 seconds
+
+                timeoutId = setTimeout(poll, REFRESH_INTERVAL_MS);
             };
 
             poll();

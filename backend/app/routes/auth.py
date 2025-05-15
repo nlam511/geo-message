@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db_session import get_db
-from app.models import User
+from app.models import User, Message, CollectedMessage
 from app.utils.auth import hash_password, verify_password, create_access_token, get_current_user
-from app.schemas import UserCreate, LoginRequest
+from app.schemas import UserCreate, LoginRequest, RefreshRequest
 
 import uuid
 
@@ -76,8 +76,10 @@ def logout(db: Session = Depends(get_db), current_user = Depends(get_current_use
     return {"status": "success", "message": "Logged out"}
 
 @router.post("/refresh")
-def refresh_token(token: str, db: Session = Depends(get_db)):
-    # Look up the token
+def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
+    token = payload.token
+
+    # Lookup token
     entry = db.query(RefreshToken).filter_by(token=token).first()
     if not entry:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -86,12 +88,12 @@ def refresh_token(token: str, db: Session = Depends(get_db)):
     if entry.expires_at < datetime.utcnow():
         raise HTTPException(status_code=401, detail="Expired refresh token")
 
-    # Load user
+    # Lookup user
     user = db.query(User).filter_by(id=entry.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Generate new access token
+    # Return new access token
     access_token = create_access_token(user)
 
     return {"access_token": access_token}
@@ -102,8 +104,7 @@ def get_user_profile(
     current_user: User = Depends(get_current_user)
 ):
     dropped_count = db.query(Message).filter(Message.user_id == current_user.id).count()
-    collected_count = db.query(Message).filter(Message.collected_by == current_user.id).count()
-
+    collected_count = db.query(CollectedMessage).filter(CollectedMessage.user_id == current_user.id).count()
 
     return {
         "id": current_user.id,

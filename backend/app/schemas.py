@@ -5,7 +5,6 @@ class MessageInput(BaseModel):
     latitude: float
     longitude: float 
 
-
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
@@ -13,3 +12,6 @@ class UserCreate(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+class RefreshRequest(BaseModel):
+    token: str

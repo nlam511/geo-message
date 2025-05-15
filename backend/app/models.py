@@ -77,9 +77,9 @@ class HiddenMessage(Base):
     hidden_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    # Link back to the user who collected the message
-    user = relationship("User", backref="dismissed_messages")
-    # Link back to the message that was collected
+    # Link back to the user who hid the message
+    user = relationship("User", backref="hidden_messages")
+    # Link back to the message that was hidden?
     message = relationship("Message", backref="dismissed_by")
 
 

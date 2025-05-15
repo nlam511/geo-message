@@ -9,15 +9,18 @@ export default function ProfileScreen() {
   const [userInfo, setUserInfo] = useState<{
     id: string;
     email: string;
-    message_count: number;
-    collected_count: number;
+    messages_dropped: number;
+    messages_collected: number;
   } | null>(null);
 
   const router = useRouter();
 
   const fetchUserInfo = useCallback(async () => {
-    const token = await SecureStore.getItemAsync('access_token');
-    if (!token) return;
+    const token = await SecureStore.getItemAsync('user_token');
+    if (!token) {
+        Alert.alert("❌ You must be logged in to drop a message.");
+        return;
+      }
 
     try {
       const backendUrl = Constants.expoConfig?.extra?.backendUrl;
@@ -90,10 +93,10 @@ export default function ProfileScreen() {
           <Text style={styles.value}>{userInfo.email}</Text>
 
           <Text style={styles.label}>Messages Dropped:</Text>
-          <Text style={styles.value}>{userInfo.message_count}</Text>
+          <Text style={styles.value}>{userInfo.messages_dropped}</Text>
 
           <Text style={styles.label}>Messages Collected:</Text>
-          <Text style={styles.value}>{userInfo.collected_count}</Text>
+          <Text style={styles.value}>{userInfo.messages_collected}</Text>
         </View>
       ) : (
         <Text style={styles.loading}>Loading user info...</Text>
@@ -107,44 +110,44 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: 'white',
-        padding: 24,
-    },
-    header: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginBottom: 24,
-        color: 'black',
-    },
-    infoBox: {
-        marginBottom: 40,
-    },
-    label: {
-        fontSize: 16,
-        color: 'gray',
-        marginBottom: 4,
-    },
-    value: {
-        fontSize: 18,
-        marginBottom: 16,
-        color: 'black',
-    },
-    loading: {
-        fontSize: 16,
-        color: 'gray',
-        marginBottom: 20,
-    },
-    logoutButton: {
-        backgroundColor: '#FF3B30',
-        padding: 14,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    logoutText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    padding: 24,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    color: 'black',
+  },
+  infoBox: {
+    marginBottom: 40,
+  },
+  label: {
+    fontSize: 16,
+    color: 'gray',
+    marginBottom: 4,
+  },
+  value: {
+    fontSize: 18,
+    marginBottom: 16,
+    color: 'black',
+  },
+  loading: {
+    fontSize: 16,
+    color: 'gray',
+    marginBottom: 20,
+  },
+  logoutButton: {
+    backgroundColor: '#FF3B30',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

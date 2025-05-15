@@ -1,6 +1,7 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform, TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Tabs, Redirect } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { Platform, TouchableOpacity, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -8,14 +9,36 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function TabLayout() {
+export default function ProtectedTabsLayout() {
+  const [authStatus, setAuthStatus] = useState<'checking' | 'unauthenticated' | 'authenticated'>('checking');
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await SecureStore.getItemAsync('user_token');
+      setAuthStatus(token ? 'authenticated' : 'unauthenticated');
+    };
+    checkAuth();
+  }, []);
+
+  if (authStatus === 'checking') {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (authStatus === 'unauthenticated') {
+    return <Redirect href="/login" />;
+  }
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
+        tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
@@ -25,37 +48,27 @@ export default function TabLayout() {
         }),
       }}
     >
-
       <Tabs.Screen
         name="store"
         options={{
           title: 'Store',
-          tabBarButton: HapticTab,
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="cart.fill" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="cart.fill" color={color} />,
         }}
       />
 
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Nearby',
-          tabBarButton: HapticTab,
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="map.fill" color={color} />
-          ),
+          title: 'Main',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="map.fill" color={color} />,
         }}
       />
-
 
       <Tabs.Screen
         name="drop"
         options={{
           title: 'Drop Message',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="plus" color="white" />
-          ),
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus" color="white" />,
           tabBarButton: (props) => <DropMessageButton {...props} />,
         }}
       />
@@ -64,9 +77,8 @@ export default function TabLayout() {
         name="collected"
         options={{
           title: 'Collected',
-          tabBarButton: HapticTab,
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="tray.full.fill" color={color} />
+            <IconSymbol size={28} name="tray.and.arrow.down.fill" color={color} />
           ),
         }}
       />
@@ -75,9 +87,8 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarButton: HapticTab,
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="tray.full.fill" color={color} />
+            <IconSymbol size={28} name="person.crop.circle.fill" color={color} />
           ),
         }}
       />
@@ -85,7 +96,7 @@ export default function TabLayout() {
   );
 }
 
-// 🟦 Circular center button component
+// 🔵 Drop Message circular tab button
 function DropMessageButton({ onPress, accessibilityState }: any) {
   const isSelected = accessibilityState?.selected;
 
@@ -103,14 +114,20 @@ function DropMessageButton({ onPress, accessibilityState }: any) {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
   dropButtonWrapper: {
     position: 'absolute',
-    bottom: -2,
+    bottom: -5,
     alignSelf: 'center',
     zIndex: 10,
   },
   circleButton: {
-    width: 70,
+    width: 50,
     height: 50,
     borderRadius: 30,
     backgroundColor: '#007AFF',

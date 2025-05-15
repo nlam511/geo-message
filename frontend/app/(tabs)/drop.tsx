@@ -31,7 +31,7 @@ export default function HomeScreen() {
     console.log("📍 Location:", latitude, longitude);
 
     // Drop message
-    const dropResult = await dropMessage(message, {latitude, longitude});
+    const dropResult = await dropMessage(message, { latitude, longitude });
     if (dropResult.status === "success") {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       setMessage('');

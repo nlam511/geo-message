@@ -17,6 +17,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { collectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import { authFetch } from '@/api/authFetch';
 
 const REFRESH_INTERVAL_MS = 30000; // 30 seconds
 
@@ -32,23 +33,15 @@ export default function NearbyScreen() {
     const refreshMessages = useCallback(async () => {
         try {
             const token = await SecureStore.getItemAsync("user_token");
-            if (!token) {
-                Alert.alert("❌ You must be logged in to get nearby messages.");
-                return;
-            }
+            if (!token) return;
 
             const location = await Location.getCurrentPositionAsync({});
             const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-            const response = await fetch(
-                `${backendUrl}/message/nearby?latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                }
+            const response = await authFetch(
+                `${backendUrl}/message/nearby?latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`
             );
+
+            if (!response.ok) throw new Error("Failed to fetch nearby messages");
 
             const data = await response.json();
             setMessages(data);
@@ -59,7 +52,6 @@ export default function NearbyScreen() {
                 latitudeDelta: 0.002,
                 longitudeDelta: 0.002,
             });
-
         } catch (error) {
             console.error("Error refreshing messages:", error);
             Alert.alert("❌ Failed to refresh messages.");
@@ -94,6 +86,27 @@ export default function NearbyScreen() {
         }
     };
 
+    useFocusEffect(
+        useCallback(() => {
+            let timeoutId: ReturnType<typeof setTimeout>;
+
+            const poll = async () => {
+                const token = await SecureStore.getItemAsync("user_token");
+                if (!token) return;
+
+                if (!selectedMessage && !isSwiping) {
+                    await refreshMessages();
+                }
+
+                timeoutId = setTimeout(poll, REFRESH_INTERVAL_MS);
+            };
+
+            poll();
+
+            return () => clearTimeout(timeoutId);
+        }, [refreshMessages, selectedMessage, isSwiping])
+    );
+
     const renderRightActions = (item: any) => (
         <TouchableOpacity
             style={[styles.swipeAction, styles.collectSwipe]}
@@ -112,30 +125,8 @@ export default function NearbyScreen() {
         </TouchableOpacity>
     );
 
-    useFocusEffect(
-        useCallback(() => {
-            let timeoutId: ReturnType<typeof setTimeout>;
-
-            const poll = async () => {
-                const token = await SecureStore.getItemAsync("user_token");
-                if (!token) return; // ✅ Exit early if not authenticated
-
-                if (!selectedMessage && !isSwiping) {
-                    await refreshMessages();
-                }
-
-                timeoutId = setTimeout(poll, REFRESH_INTERVAL_MS);
-            };
-
-            poll();
-
-            return () => clearTimeout(timeoutId);
-        }, [refreshMessages, selectedMessage, isSwiping])
-    );
-
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
-            {/* Map in top half with margin to extend into notch */}
             <View style={[styles.topHalf, { marginTop: -insets.top }]}>
                 {region ? (
                     <MapView
@@ -164,7 +155,6 @@ export default function NearbyScreen() {
                 )}
             </View>
 
-            {/* Bottom half: list, wrapped in SafeArea for bottom padding */}
             <SafeAreaView style={styles.bottomHalf} edges={['bottom']}>
                 <FlatList
                     data={messages}
@@ -249,16 +239,8 @@ const styles = StyleSheet.create({
     messageText: { fontSize: 16, marginBottom: 4 },
     meta: { fontSize: 12, color: 'gray' },
     empty: { textAlign: 'center', marginTop: 40, fontSize: 16, color: 'gray' },
-    topHalf: {
-        flex: 1,
-        backgroundColor: 'white',
-    },
-    bottomHalf: {
-        flex: 1,
-        backgroundColor: 'white',
-        paddingHorizontal: 10,
-        paddingBottom: 20,
-    },
+    topHalf: { flex: 1, backgroundColor: 'white' },
+    bottomHalf: { flex: 1, backgroundColor: 'white', paddingHorizontal: 10, paddingBottom: 20 },
     mapView: { flex: 1, width: '100%', height: '100%' },
     mapLoading: { justifyContent: 'center', alignItems: 'center' },
     swipeAction: { justifyContent: 'center', alignItems: 'center', width: 100, height: '100%' },

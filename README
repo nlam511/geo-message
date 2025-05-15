@@ -44,11 +44,9 @@ TODOS:
 
 TOP PRIORITY
 -- Implement Refresh Token to front end
+-- the Nearby Page is still really buggy.  Got to fix this
 -- Push Notification when someone collects your message.
--- Add Animation to collect/dismiss message?
--- Add Sound to collect/dismiss message
 -- Make the swiping more fluid - like spotify
--- Register Page, make sure to log in immediately after registration
 -- CORS?
 
 -- Make it so you have to log in to use the app.

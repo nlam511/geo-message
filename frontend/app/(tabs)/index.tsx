@@ -107,24 +107,6 @@ export default function NearbyScreen() {
         }, [refreshMessages, selectedMessage, isSwiping])
     );
 
-    const renderRightActions = (item: any) => (
-        <TouchableOpacity
-            style={[styles.swipeAction, styles.collectSwipe]}
-            onPress={() => handleCollect(item.id)}
-        >
-            <Text style={styles.swipeText}>Collect</Text>
-        </TouchableOpacity>
-    );
-
-    const renderLeftActions = (item: any) => (
-        <TouchableOpacity
-            style={[styles.swipeAction, styles.hideSwipe]}
-            onPress={() => handleHide(item.id)}
-        >
-            <Text style={styles.swipeText}>Hide</Text>
-        </TouchableOpacity>
-    );
-
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
             <View style={[styles.topHalf, { marginTop: -insets.top }]}>
@@ -161,10 +143,17 @@ export default function NearbyScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
                         <Swipeable
-                            renderLeftActions={() => renderLeftActions(item)}
-                            renderRightActions={() => renderRightActions(item)}
+                            renderLeftActions={() => <View style={styles.hideSwipe} />}
+                            renderRightActions={() => <View style={styles.collectSwipe} />}
                             onSwipeableWillOpen={() => setIsSwiping(true)}
                             onSwipeableClose={() => setIsSwiping(false)}
+                            onSwipeableOpen={(direction) => {
+                                if (direction === 'left') {
+                                    handleHide(item.id);
+                                } else if (direction === 'right') {
+                                    handleCollect(item.id);
+                                }
+                            }}
                         >
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                                 <View style={styles.messageBox}>
@@ -244,8 +233,8 @@ const styles = StyleSheet.create({
     mapView: { flex: 1, width: '100%', height: '100%' },
     mapLoading: { justifyContent: 'center', alignItems: 'center' },
     swipeAction: { justifyContent: 'center', alignItems: 'center', width: 100, height: '100%' },
-    hideSwipe: { backgroundColor: '#FF3B30' },
-    collectSwipe: { backgroundColor: '#007AFF' },
+    hideSwipe: { backgroundColor: '#FF3B30', flex: 1 },
+    collectSwipe: { backgroundColor: '#007AFF', flex: 1 },
     swipeText: { color: 'white', fontWeight: '600' },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
     modalContent: { width: '85%', backgroundColor: 'white', borderRadius: 12, padding: 20, alignItems: 'center' },

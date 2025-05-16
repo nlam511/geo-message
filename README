@@ -47,12 +47,14 @@ TOP PRIORITY
 -- the Nearby Page is still really buggy.  Got to fix this
 -- Push Notification when someone collects your message.
 -- CORS?
-
 -- Make it so you have to log in to use the app.
 -- Make sure to handle the cases where a user's token expire in the middle of using the app/ the refresh token retrieval doesnt work.
+-- Daily Message Limit - start high - 15
+-- Brainstorm how I want to track Subscription users vs Free users.
 
 
 Not So Urgent
+-- Tags on Messages.
 -- Collectables
 -- Customizable Marker, profile picture border, message border
 -- Index the location column?
@@ -66,7 +68,6 @@ Not So Urgent
 -- Different type of messages
 -- Subscription Model
 -- if no one interacts with a message after x amount of time. delete it?
-
 -- test the relationship stuff, i dont quite understand it
 
 
@@ -83,10 +84,10 @@ Premimum features
 - Greater Message Radius
 - Polling while app is in backgroud / notification when you come in range of a message
 - Unlimited Message Collects?
-
+- Message Notifier
 
 Store 
 - 1/3/5 messages
 - Radius Boost
 - Markers/Profile Borders/ Message Borders
-- 
+- Map Themes

@@ -8,6 +8,9 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { TabHistoryProvider } from '@/context/TabHistoryContext';
+import { useRouter, useSegments } from 'expo-router';
+import { useTabHistory } from '@/context/TabHistoryContext';
 
 export default function ProtectedTabsLayout() {
   const [authStatus, setAuthStatus] = useState<'checking' | 'unauthenticated' | 'authenticated'>('checking');
@@ -34,75 +37,85 @@ export default function ProtectedTabsLayout() {
   }
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}
-    >
-      <Tabs.Screen
-        name="store"
-        options={{
-          title: 'Store',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="cart.fill" color={color} />,
+    <TabHistoryProvider>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          headerShown: false,
+          tabBarButton: HapticTab,
+          tabBarBackground: TabBarBackground,
+          tabBarStyle: Platform.select({
+            ios: {
+              position: 'absolute',
+            },
+            default: {},
+          }),
         }}
-      />
+      >
+        <Tabs.Screen
+          name="store"
+          options={{
+            title: 'Store',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="cart.fill" color={color} />,
+          }}
+        />
 
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Main',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="map.fill" color={color} />,
-        }}
-      />
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Main',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="map.fill" color={color} />,
+          }}
+        />
 
-      <Tabs.Screen
-        name="drop"
-        options={{
-          title: 'Drop Message',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus" color="white" />,
-          tabBarButton: (props) => <DropMessageButton {...props} />,
-        }}
-      />
+        <Tabs.Screen
+          name="drop"
+          options={{
+            title: 'Drop Message',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus" color="white" />,
+            tabBarButton: (props) => <DropMessageButton {...props} />,
+          }}
+        />
 
-      <Tabs.Screen
-        name="collected"
-        options={{
-          title: 'Collected',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="tray.and.arrow.down.fill" color={color} />
-          ),
-        }}
-      />
+        <Tabs.Screen
+          name="collected"
+          options={{
+            title: 'Collected',
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={28} name="tray.and.arrow.down.fill" color={color} />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.crop.circle.fill" color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={28} name="person.crop.circle.fill" color={color} />
+            ),
+          }}
+        />
+      </Tabs>
+    </TabHistoryProvider>
   );
 }
 
 // 🔵 Drop Message circular tab button
 function DropMessageButton({ onPress, accessibilityState }: any) {
   const isSelected = accessibilityState?.selected;
+  const router = useRouter();
+  const segments = useSegments();
+  const { setLastTab } = useTabHistory();
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={() => {
+        // Join segments into path (e.g., ['profile'] → '/profile')
+        const currentPath = '/' + segments.join('/');
+        setLastTab(currentPath); // ✅ store previous tab path
+        router.push('/drop');
+      }}
       style={styles.dropButtonWrapper}
       activeOpacity={0.9}
     >

@@ -1,36 +1,45 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Keyboard, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Alert,
+  TouchableOpacity,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  StyleSheet,
+} from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { dropMessage } from '@/api/messages';
+import { useTabHistory } from '@/context/TabHistoryContext';
 
 export default function HomeScreen() {
   const [message, setMessage] = useState('');
+  const router = useRouter();
+  const { lastTab } = useTabHistory();
 
   const handleDropMessage = async () => {
-    // 🔐 Get the token from secure storage
     const token = await SecureStore.getItemAsync("user_token");
     if (!token) {
       Alert.alert("❌ You must be logged in to drop a message.");
       return;
     }
 
-    // Ask for location permission
     const { status } = await Location.requestForegroundPermissionsAsync();
-    console.log("🔐 Location permission status:", status);
     if (status !== 'granted') {
       Alert.alert('Permission denied', 'We need location permission to drop a message.');
       return;
     }
 
-    // Get current location
     const curr_location = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = curr_location.coords;
-    console.log("📍 Location:", latitude, longitude);
 
-    // Drop message
     const dropResult = await dropMessage(message, { latitude, longitude });
     if (dropResult.status === "success") {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -49,6 +58,11 @@ export default function HomeScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
       >
         <View style={styles.container}>
+          {/* ❌ X Close Button */}
+          <TouchableOpacity onPress={() => router.push({ pathname: (lastTab || '/index') as any })} style={styles.closeButton}>
+            <Text style={styles.closeText}>✕</Text>
+          </TouchableOpacity>
+
           <Text style={styles.title}>Drop a Geo-Message</Text>
           <TextInput
             style={styles.input}
@@ -72,6 +86,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'white',
   },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+    backgroundColor: '#000',
+    borderRadius: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  closeText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   title: {
     fontSize: 30,
     marginBottom: 10,
@@ -87,7 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
   },
   customButton: {
-    backgroundColor: '#007AFF', // iOS-style blue
+    backgroundColor: '#007AFF',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 8,

@@ -49,6 +49,7 @@ TOP PRIORITY
 -- CORS?
 -- Make it so you have to log in to use the app.
 -- Make sure to handle the cases where a user's token expire in the middle of using the app/ the refresh token retrieval doesnt work.
+-- add the toast notification where appliciable
 -- Index the location column?
 
 

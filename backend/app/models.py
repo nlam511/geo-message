@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime, timedelta
+from app.enums import SubscriptionTier
 
 import uuid
 
@@ -11,20 +12,37 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
-    
-    # Primary key
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, index=True)
 
-    # Main content
+    # Primary Key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    stripe_customer_id = Column(String, nullable=True)
+    stripe_subscription_id = Column(String, nullable=True)
+    subscription_status = Column(String, default="inactive")
+    subscription_expires_at = Column(DateTime, nullable=True)
+    subscription_tier = Column(String, ForeignKey("subscription_tiers.id"), default="free", nullable=False)
+    tier = relationship("SubscriptionTier", back_populates="users")
+    daily_drop_count = Column(Integer, default=0)
+    last_drop_date = Column(DateTime, nullable=True)
 
-    
     # Relationships
-    # One-to-many: A user can drop many messages
     messages = relationship("Message", back_populates="owner")
-    # Many-to-many (via CollectedMessage): A user can collect many messages
     collected_messages = relationship("CollectedMessage", back_populates="user")
+    hidden_messages = relationship("HiddenMessage", backref="user")
+    refresh_tokens = relationship("RefreshToken", backref="user")
+
+
+class SubscriptionTier(Base):
+    __tablename__ = "subscription_tiers"
+
+    id = Column(String, primary_key=True)  # e.g., 'free', 'pro', 'gold'
+    name = Column(String, nullable=False)  # Display name like 'Free Plan', 'Pro Plan'
+    stripe_price_id = Column(String, nullable=False)  # For syncing with Stripe Price
+    drop_limit = Column(Integer, default=5)
+    pickup_radius = Column(Integer, default=50)  # In meters
+
+    users = relationship("User", back_populates="tier")
 
 
 class Message(Base):

@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { authFetch } from '@/api/authFetch';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 
 const REFRESH_INTERVAL_MS = 30000;
 
@@ -64,6 +65,12 @@ export default function NearbyScreen() {
         setRefreshing(true);
         await refreshMessages();
         setRefreshing(false);
+        Toast.show({
+            type: 'success',
+            text1: ' Message Refreshed!',
+            visibilityTime: 1500,
+            topOffset: insets.top,
+        });
     };
 
     const handleCollect = async (id: string) => {
@@ -72,8 +79,19 @@ export default function NearbyScreen() {
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             await refreshMessages();
             setSelectedMessage(null);
+            Toast.show({
+                type: 'success',
+                text1: ' Message Collected!',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
         } else {
-            Alert.alert("❌ Collect Failed", result.message);
+            Toast.show({
+                type: 'error',
+                text1: ' Failed to Collect Message',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
         }
     };
 
@@ -83,8 +101,19 @@ export default function NearbyScreen() {
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             await refreshMessages();
             setSelectedMessage(null);
+            Toast.show({
+                type: 'success',
+                text1: ' Message Hidden!',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
         } else {
-            Alert.alert("❌ Hide Failed", result.message);
+            Toast.show({
+                type: 'error',
+                text1: ' Failed to Hide Message',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
         }
     };
 

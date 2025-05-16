@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Toast from 'react-native-toast-message';
 
 export default function RootLayout() {
   const [isAuthChecked, setIsAuthChecked] = useState(false);
@@ -36,7 +37,12 @@ export default function RootLayout() {
           <ActivityIndicator />
         </View>
       ) : (
-        <Slot />
+        <>
+          <View style={{ flex: 1 }}>
+            <Slot />
+            <Toast />
+          </View>
+        </>
       )}
     </GestureHandlerRootView>
   );

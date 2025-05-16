@@ -12,15 +12,18 @@ import {
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
 import { uncollectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
 
 export default function CollectedScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+
+    const insets = useSafeAreaInsets();
 
     const fetchCollectedMessages = useCallback(async () => {
         try {
@@ -53,6 +56,12 @@ export default function CollectedScreen() {
         setRefreshing(true);
         await fetchCollectedMessages();
         setRefreshing(false);
+        Toast.show({
+            type: 'success',
+            text1: 'Message Refreshed!',
+            visibilityTime: 1500,
+            topOffset: insets.top,
+        });
     };
 
     useFocusEffect(
@@ -66,8 +75,19 @@ export default function CollectedScreen() {
         if (result.status === "success") {
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             setSelectedMessage(null);
+            Toast.show({
+                type: 'success',
+                text1: 'Message Hidden!',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
         } else {
-            Alert.alert("❌ Hide Failed", result.message);
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to Hide Message!',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
         }
     };
 
@@ -77,8 +97,19 @@ export default function CollectedScreen() {
         if (result.status === 'success') {
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             setMessages((prev) => prev.filter((msg) => msg.id !== id));
+            Toast.show({
+                type: 'success',
+                text1: ' Message Uncollected!',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
         } else {
-            Alert.alert('Error', result.message);
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to Uncollect Message',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
         }
     };
 
@@ -198,6 +229,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'white',
+        marginTop: 20
     },
     title: {
         fontSize: 24,

@@ -18,11 +18,15 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { dropMessage } from '@/api/messages';
 import { useTabHistory } from '@/context/TabHistoryContext';
+import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const [message, setMessage] = useState('');
   const router = useRouter();
   const { lastTab } = useTabHistory();
+
+  const insets = useSafeAreaInsets();
 
   const handleDropMessage = async () => {
     const token = await SecureStore.getItemAsync("user_token");
@@ -45,8 +49,20 @@ export default function HomeScreen() {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       setMessage('');
       Keyboard.dismiss();
+      Toast.show({
+        type: 'success',
+        text1: ' Message Dropped!',
+        visibilityTime: 1500,
+        topOffset: insets.top,
+      });
+      router.push({ pathname: (lastTab || '/index') as any })
     } else {
-      Alert.alert("Error", dropResult.message);
+      Toast.show({
+        type: 'error',
+        text1: ' Failed to Drop Message',
+        visibilityTime: 1500,
+        topOffset: insets.top,
+      });
     }
   };
 

@@ -124,7 +124,7 @@ export async function hideMessage(message_id: string): Promise<APIResponse> {
             console.error("[Hide] Server error:", error);
             return {
                 status: "server_error",
-                message: error.detail || "Failed to uncollect message.",
+                message: error.detail || "[Uncollect] Failed to uncollect message.",
             };
         }
     } catch (err) {
@@ -144,14 +144,14 @@ export async function dropMessage(
     if (!token) {
       return {
         status: "unauthorized",
-        message: "You must be logged in to perform this action.",
+        message: "[Drop] You must be logged in to perform this action.",
       };
     }
   
     if (!message_text.trim()) {
       return {
         status: "unauthorized",
-        message: "You cannot drop an empty message.",
+        message: "[Drop] You cannot drop an empty message.",
       };
     }
   
@@ -176,7 +176,7 @@ export async function dropMessage(
         const error = await response.json();
         return {
           status: "server_error",
-          message: error.detail || "Failed to drop message.",
+          message: error.detail || "[Drop] Failed to drop message.",
         };
       }
     } catch (err) {

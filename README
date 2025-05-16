@@ -50,6 +50,7 @@ TOP PRIORITY
 -- Make it so you have to log in to use the app.
 -- Make sure to handle the cases where a user's token expire in the middle of using the app/ the refresh token retrieval doesnt work.
 -- Daily Message Limit - start high - 15
+-- Index the location column?
 -- Brainstorm how I want to track Subscription users vs Free users.
 
 
@@ -57,7 +58,6 @@ Not So Urgent
 -- Tags on Messages.
 -- Collectables
 -- Customizable Marker, profile picture border, message border
--- Index the location column?
 -- loading screen
 -- tab to see your own messages, and perhaps metadata bout your message
 -- currently polling every 30 seconds, see if theres a better way to do this.

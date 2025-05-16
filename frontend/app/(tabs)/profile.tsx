@@ -6,148 +6,147 @@ import Constants from 'expo-constants';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 export default function ProfileScreen() {
-  const [userInfo, setUserInfo] = useState<{
-    id: string;
-    email: string;
-    messages_dropped: number;
-    messages_collected: number;
-  } | null>(null);
+    const [userInfo, setUserInfo] = useState<{
+        id: string;
+        email: string;
+        messages_dropped: number;
+        messages_collected: number;
+    } | null>(null);
 
-  const router = useRouter();
+    const router = useRouter();
 
-  const fetchUserInfo = useCallback(async () => {
-    const token = await SecureStore.getItemAsync('user_token');
-    if (!token) {
-        Alert.alert("❌ You must be logged in to drop a message.");
-        return;
-      }
+    const fetchUserInfo = useCallback(async () => {
+        const token = await SecureStore.getItemAsync('user_token');
+        if (!token) {
+            Alert.alert("❌ You must be logged in to drop a message.");
+            return;
+        }
 
-    try {
-      const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-      const response = await fetch(`${backendUrl}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        try {
+            const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+            const response = await fetch(`${backendUrl}/auth/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-      const data = await response.json();
-      setUserInfo(data);
-    } catch (error) {
-      console.error('Failed to fetch user info:', error);
-    }
-  }, []);
+            const data = await response.json();
+            setUserInfo(data);
+        } catch (error) {
+            console.error('Failed to fetch user info:', error);
+        }
+    }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchUserInfo();
-    }, [fetchUserInfo])
-  );
+    useFocusEffect(
+        useCallback(() => {
+            fetchUserInfo();
+        }, [fetchUserInfo])
+    );
 
-  const handleLogout = async () => {
-    const userToken = await SecureStore.getItemAsync('user_token');
-    const refreshToken = await SecureStore.getItemAsync('refresh_token');
+    const handleLogout = async () => {
+        const userToken = await SecureStore.getItemAsync('user_token');
+        const refreshToken = await SecureStore.getItemAsync('refresh_token');
 
-    // if (!userToken || !refreshToken) {
-    //   Alert.alert('Missing tokens');
-    //   return;
-    // }
+        // if (!userToken || !refreshToken) {
+        //   Alert.alert('Missing tokens');
+        //   return;
+        // }
 
-    try {
-      const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-      const response = await fetch(`${backendUrl}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token: refreshToken }),
-      });
+        try {
+            const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+            const response = await fetch(`${backendUrl}/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${userToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: refreshToken }),
+            });
 
-      await SecureStore.deleteItemAsync('user_token');
-      await SecureStore.deleteItemAsync('refresh_token');
+            await SecureStore.deleteItemAsync('user_token');
+            await SecureStore.deleteItemAsync('refresh_token');
 
-      if (!response.ok) {
-        const err = await response.json();
-        Alert.alert('Logout failed', err.detail || 'Unknown error');
-        return;
-      }
+            if (!response.ok) {
+                const err = await response.json();
+                Alert.alert('Logout failed', err.detail || 'Unknown error');
+                return;
+            }
 
-      Alert.alert('Logged out');
-      router.replace('/login');
-    } catch (err) {
-      console.error('Logout error:', err);
-      Alert.alert('Logout error');
-    }
-  };
+            router.replace('/login');
+        } catch (err) {
+            console.error('Logout error:', err);
+            Alert.alert('Logout error');
+        }
+    };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>👤 Profile</Text>
+    return (
+        <SafeAreaView style={styles.container}>
+            <Text style={styles.header}>👤 Profile</Text>
 
-      {userInfo ? (
-        <View style={styles.infoBox}>
-          <Text style={styles.label}>User ID:</Text>
-          <Text style={styles.value}>{userInfo.id}</Text>
+            {userInfo ? (
+                <View style={styles.infoBox}>
+                    <Text style={styles.label}>User ID:</Text>
+                    <Text style={styles.value}>{userInfo.id}</Text>
 
-          <Text style={styles.label}>Email:</Text>
-          <Text style={styles.value}>{userInfo.email}</Text>
+                    <Text style={styles.label}>Email:</Text>
+                    <Text style={styles.value}>{userInfo.email}</Text>
 
-          <Text style={styles.label}>Messages Dropped:</Text>
-          <Text style={styles.value}>{userInfo.messages_dropped}</Text>
+                    <Text style={styles.label}>Messages Dropped:</Text>
+                    <Text style={styles.value}>{userInfo.messages_dropped}</Text>
 
-          <Text style={styles.label}>Messages Collected:</Text>
-          <Text style={styles.value}>{userInfo.messages_collected}</Text>
-        </View>
-      ) : (
-        <Text style={styles.loading}>Loading user info...</Text>
-      )}
+                    <Text style={styles.label}>Messages Collected:</Text>
+                    <Text style={styles.value}>{userInfo.messages_collected}</Text>
+                </View>
+            ) : (
+                <Text style={styles.loading}>Loading user info...</Text>
+            )}
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  );
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                <Text style={styles.logoutText}>Log Out</Text>
+            </TouchableOpacity>
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'white',
-    padding: 24,
-  },
-  header: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    color: 'black',
-  },
-  infoBox: {
-    marginBottom: 40,
-  },
-  label: {
-    fontSize: 16,
-    color: 'gray',
-    marginBottom: 4,
-  },
-  value: {
-    fontSize: 18,
-    marginBottom: 16,
-    color: 'black',
-  },
-  loading: {
-    fontSize: 16,
-    color: 'gray',
-    marginBottom: 20,
-  },
-  logoutButton: {
-    backgroundColor: '#FF3B30',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+    container: {
+        flex: 1,
+        backgroundColor: 'white',
+        padding: 24,
+    },
+    header: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        marginBottom: 24,
+        color: 'black',
+    },
+    infoBox: {
+        marginBottom: 40,
+    },
+    label: {
+        fontSize: 16,
+        color: 'gray',
+        marginBottom: 4,
+    },
+    value: {
+        fontSize: 18,
+        marginBottom: 16,
+        color: 'black',
+    },
+    loading: {
+        fontSize: 16,
+        color: 'gray',
+        marginBottom: 20,
+    },
+    logoutButton: {
+        backgroundColor: '#FF3B30',
+        padding: 14,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    logoutText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
 });

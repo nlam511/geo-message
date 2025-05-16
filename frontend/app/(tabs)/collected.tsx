@@ -1,11 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, FlatList, StyleSheet, Alert, TouchableOpacity, Modal } from 'react-native';
+import {
+    View,
+    Text,
+    FlatList,
+    StyleSheet,
+    Alert,
+    TouchableOpacity,
+    Modal,
+    Animated,
+} from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
-import { uncollectMessage } from '@/api/messages';
+import { uncollectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
 
 export default function CollectedScreen() {
@@ -48,27 +57,64 @@ export default function CollectedScreen() {
 
     useFocusEffect(
         useCallback(() => {
-          fetchCollectedMessages(); // Run once when screen comes into focus
+            fetchCollectedMessages();
         }, [fetchCollectedMessages])
-      );
-      
-
-    const renderRightActions = (item: any) => (
-        <TouchableOpacity
-            style={[styles.swipeAction, styles.uncollectSwipe]}
-            onPress={async () => {
-                const uncollectResult = await uncollectMessage(item.id);
-                if (uncollectResult.status === 'success') {
-                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                    setMessages(prev => prev.filter(msg => msg.id !== item.id));
-                } else {
-                    Alert.alert('Error', uncollectResult.message);
-                }
-            }}
-        >
-            <Text style={styles.swipeText}>Uncollect</Text>
-        </TouchableOpacity>
     );
+
+    const handleHide = async (id: string) => {
+        const result = await hideMessage(id);
+        if (result.status === "success") {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            setSelectedMessage(null);
+        } else {
+            Alert.alert("❌ Hide Failed", result.message);
+        }
+    };
+
+
+    const handleUncollect = async (id: string) => {
+        const result = await uncollectMessage(id);
+        if (result.status === 'success') {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            setMessages((prev) => prev.filter((msg) => msg.id !== id));
+        } else {
+            Alert.alert('Error', result.message);
+        }
+    };
+
+    const renderLeftActions = (
+        _progress: Animated.AnimatedInterpolation<number>,
+        dragX: Animated.AnimatedInterpolation<number>
+    ) => {
+        const opacity = dragX.interpolate({
+            inputRange: [0, 64],
+            outputRange: [0, 1],
+            extrapolate: 'clamp',
+        });
+
+        return (
+            <Animated.View style={[styles.swipeAction, { backgroundColor: '#FF3B30', opacity }]}>
+                <Text style={styles.swipeText}>Hide</Text>
+            </Animated.View>
+        );
+    };
+
+    const renderRightActions = (
+        _progress: Animated.AnimatedInterpolation<number>,
+        dragX: Animated.AnimatedInterpolation<number>
+    ) => {
+        const opacity = dragX.interpolate({
+            inputRange: [-64, 0],
+            outputRange: [1, 0],
+            extrapolate: 'clamp',
+        });
+
+        return (
+            <Animated.View style={[styles.swipeAction, { backgroundColor: '#007AFF', opacity }]}>
+                <Text style={styles.swipeText}>Uncollect</Text>
+            </Animated.View>
+        );
+    };
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
@@ -78,7 +124,17 @@ export default function CollectedScreen() {
                     data={messages}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                        <Swipeable renderRightActions={() => renderRightActions(item)}>
+                        <Swipeable
+                            renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX)}
+                            renderRightActions={(progress, dragX) => renderRightActions(progress, dragX)}
+                            onSwipeableOpen={(direction) => {
+                                if (direction === 'left') {
+                                    handleHide(item.id);
+                                    handleUncollect(item.id);
+                                }
+                                if (direction === 'right') { handleUncollect(item.id); }
+                            }}
+                        >
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                                 <View style={styles.messageBox}>
                                     <Text style={styles.messageText}>{item.text}</Text>
@@ -124,14 +180,8 @@ export default function CollectedScreen() {
                             <TouchableOpacity
                                 style={styles.uncollectButton}
                                 onPress={async () => {
-                                    const uncollectResult = await uncollectMessage(selectedMessage.id);
-                                    if (uncollectResult.status === 'success') {
-                                        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                                        setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
-                                        setSelectedMessage(null);
-                                    } else {
-                                        Alert.alert('Error', uncollectResult.message);
-                                    }
+                                    await handleUncollect(selectedMessage.id);
+                                    setSelectedMessage(null);
                                 }}
                             >
                                 <Text style={styles.uncollectButtonText}>Uncollect</Text>
@@ -147,7 +197,6 @@ export default function CollectedScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
         backgroundColor: 'white',
     },
     title: {
@@ -160,10 +209,12 @@ const styles = StyleSheet.create({
     messageBox: {
         borderWidth: 1,
         borderColor: '#ccc',
-        borderRadius: 8,
+        borderRadius: 0,
         padding: 12,
-        marginBottom: 12,
+        marginBottom: 1,
         backgroundColor: '#f9f9f9',
+        width: '100%',
+        height: 64,
     },
     messageText: {
         fontSize: 16,
@@ -236,14 +287,12 @@ const styles = StyleSheet.create({
     swipeAction: {
         justifyContent: 'center',
         alignItems: 'center',
-        width: 100,
+        width: 80,
         height: '100%',
     },
     swipeText: {
         color: 'white',
+        fontSize: 16,
         fontWeight: '600',
-    },
-    uncollectSwipe: {
-        backgroundColor: '#007AFF',
     },
 });

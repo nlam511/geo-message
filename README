@@ -54,16 +54,39 @@ TOP PRIORITY
 
 Not So Urgent
 -- Collectables
--- Profile Tab w/ Logout button
--- tab to see your own messages, and perhaps metadata bout your message
+-- Customizable Marker, profile picture border, message border
 -- Index the location column?
--- currently polling every 5 seconds, see if theres a better way to do this.
+-- loading screen
+-- tab to see your own messages, and perhaps metadata bout your message
+-- currently polling every 30 seconds, see if theres a better way to do this.
 -- Message Expiry
 -- Keep metadata about how many times a message has been collected?
 -- Friends List
 -- Achievements
 -- Different type of messages
 -- Subscription Model
--- loading screen
+-- if no one interacts with a message after x amount of time. delete it?
 
 -- test the relationship stuff, i dont quite understand it
+
+
+
+
+
+Premimum features
+- More Messages
+- Exclusive Markers/Profile Borders/ Message Borders
+- Ability to set your own profile picture
+- Greater Message Expiry Date?
+- Ability to add pictures to message
+- Greater Character Limit on a message
+- Greater Message Radius
+- Polling while app is in backgroud / notification when you come in range of a message
+- Unlimited Message Collects?
+
+
+Store 
+- 1/3/5 messages
+- Radius Boost
+- Markers/Profile Borders/ Message Borders
+- 

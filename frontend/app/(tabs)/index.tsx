@@ -112,83 +112,36 @@ export default function NearbyScreen() {
     const renderLeftActions = (
         _progress: Animated.AnimatedInterpolation<number>,
         dragX: Animated.AnimatedInterpolation<number>
-    ) => {
-        const scale = dragX.interpolate({
-            inputRange: [0, 64],
-            outputRange: [0.8, 1.2],
-            extrapolate: 'clamp',
-        });
-
+      ) => {
         const opacity = dragX.interpolate({
-            inputRange: [0, 64],
-            outputRange: [0, 1],
-            extrapolate: 'clamp',
+          inputRange: [0, 64],
+          outputRange: [0, 1],
+          extrapolate: 'clamp',
         });
-
-        const translateX = dragX.interpolate({
-            inputRange: [0, 64],
-            outputRange: [-12, 0],
-            extrapolate: 'clamp',
-        });
-
+      
         return (
-            <Animated.View style={[styles.swipeIconContainer]}>
-                <Animated.View
-                    style={[
-                        styles.iconBubble,
-                        {
-                            backgroundColor: '#FF3B30',
-                            transform: [{ scale }, { translateX }],
-                            opacity,
-                        },
-                    ]}
-                >
-                    <Ionicons name="eye-off" size={20} color="white" />
-                </Animated.View>
-            </Animated.View>
+          <Animated.View style={[styles.fullSwipeAction, { backgroundColor: '#FF3B30', opacity }]}>
+            <Text style={styles.swipeText}>Hide</Text>
+          </Animated.View>
         );
-    };
-
-
-    const renderRightActions = (
+      };
+      
+      const renderRightActions = (
         _progress: Animated.AnimatedInterpolation<number>,
         dragX: Animated.AnimatedInterpolation<number>
-    ) => {
-        const scale = dragX.interpolate({
-            inputRange: [-64, 0],
-            outputRange: [1.2, 0.8],
-            extrapolate: 'clamp',
-        });
-
+      ) => {
         const opacity = dragX.interpolate({
-            inputRange: [-64, 0],
-            outputRange: [1, 0],
-            extrapolate: 'clamp',
+          inputRange: [-64, 0],
+          outputRange: [1, 0],
+          extrapolate: 'clamp',
         });
-
-        const translateX = dragX.interpolate({
-            inputRange: [-64, 0],
-            outputRange: [0, 12],
-            extrapolate: 'clamp',
-        });
-
+      
         return (
-            <Animated.View style={[styles.swipeIconContainer]}>
-                <Animated.View
-                    style={[
-                        styles.iconBubble,
-                        {
-                            backgroundColor: '#007AFF',
-                            transform: [{ scale }, { translateX }],
-                            opacity,
-                        },
-                    ]}
-                >
-                    <Ionicons name="download" size={20} color="white" />
-                </Animated.View>
-            </Animated.View>
+          <Animated.View style={[styles.fullSwipeAction, { backgroundColor: '#007AFF', opacity }]}>
+            <Text style={styles.swipeText}>Collect</Text>
+          </Animated.View>
         );
-    };
+      };
 
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
@@ -297,17 +250,16 @@ const styles = StyleSheet.create({
     messageBox: {
         borderWidth: 1,
         borderColor: '#ccc',
-        borderRadius: 8,
         padding: 12,
-        marginBottom: 12,
         backgroundColor: '#f9f9f9',
-        height: 64
+        height: 64,
+        width: '100%'
     },
     messageText: { fontSize: 16, marginBottom: 4 },
     meta: { fontSize: 12, color: 'gray' },
     empty: { textAlign: 'center', marginTop: 40, fontSize: 16, color: 'gray' },
     topHalf: { flex: 1, backgroundColor: 'white' },
-    bottomHalf: { flex: 1, backgroundColor: 'white', paddingHorizontal: 10, paddingBottom: 20 },
+    bottomHalf: { flex: 1, backgroundColor: 'white', paddingBottom: 20 },
     mapView: { flex: 1, width: '100%', height: '100%' },
     mapLoading: { justifyContent: 'center', alignItems: 'center' },
     swipeIconContainer: {
@@ -337,4 +289,16 @@ const styles = StyleSheet.create({
     collectButtonText: { color: 'white', fontWeight: '600', fontSize: 16 },
     hideButton: { backgroundColor: '#FF3B30', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, marginTop: 10 },
     hideButtonText: { color: 'white', fontSize: 16, fontWeight: '500', textAlign: 'center' },
+    fullSwipeAction: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        height: '100%',
+      },
+      
+      swipeText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+      },
 });

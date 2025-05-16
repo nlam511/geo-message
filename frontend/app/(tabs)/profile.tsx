@@ -11,6 +11,7 @@ export default function ProfileScreen() {
         email: string;
         messages_dropped: number;
         messages_collected: number;
+        daily_drops_remaining: number;
     } | null>(null);
 
     const router = useRouter();
@@ -96,6 +97,9 @@ export default function ProfileScreen() {
 
                     <Text style={styles.label}>Messages Collected:</Text>
                     <Text style={styles.value}>{userInfo.messages_collected}</Text>
+
+                    <Text style={styles.label}>Daily Drops Remaining:</Text>
+                    <Text style={styles.value}>{userInfo.daily_drops_remaining}</Text>
                 </View>
             ) : (
                 <Text style={styles.loading}>Loading user info...</Text>

@@ -4,6 +4,9 @@ from app.db_session import get_db
 from app.models import User, Message, CollectedMessage, RefreshToken
 from app.utils.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.schemas import UserCreate, LoginRequest, RefreshRequest
+from app.enums import SubscriptionTier
+from app.tier_limits import DROP_LIMITS
+from datetime import datetime, date
 
 import uuid
 
@@ -102,9 +105,25 @@ def get_user_profile(
     dropped_count = db.query(Message).filter(Message.user_id == current_user.id).count()
     collected_count = db.query(CollectedMessage).filter(CollectedMessage.user_id == current_user.id).count()
 
+    # Get Remaining Drops Count
+    try:
+        tier = SubscriptionTier(current_user.subscription_tier)
+    except ValueError:
+        tier = SubscriptionTier.FREE
+    drop_limit = DROP_LIMITS.get(tier, DROP_LIMITS[SubscriptionTier.FREE])
+
+    # Reset drop count if it's a new day
+    if not current_user.last_drop_date or current_user.last_drop_date.date() < date.today():
+        drops_used = 0
+    else:
+        drops_used = current_user.daily_drop_count
+
+    daily_drops_remaining = max(0, drop_limit - drops_used)
+
     return {
         "id": current_user.id,
         "email": current_user.email,
         "messages_dropped": dropped_count,
         "messages_collected": collected_count,
+        "daily_drops_remaining": daily_drops_remaining,
     }

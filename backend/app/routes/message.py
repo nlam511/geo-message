@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.db_session import get_db
 from app.models import Message, CollectedMessage, HiddenMessage
-from datetime import datetime
+from datetime import datetime, date
 from app.utils.geo import calculate_distance
 from app.utils.auth import get_current_user
 from app.schemas import MessageInput
 from geoalchemy2.shape import to_shape
+from app.enums import SubscriptionTier
+from app.tier_limits import DROP_LIMITS
 
 
 router = APIRouter(prefix="/message", tags=["Messages"])
@@ -15,6 +17,25 @@ router = APIRouter(prefix="/message", tags=["Messages"])
 
 @router.post("/drop")
 def drop_message(payload: MessageInput, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    # Reset count if it's a new day
+    today = date.today()
+    if not current_user.last_drop_date or current_user.last_drop_date.date() < today:
+        current_user.daily_drop_count = 0
+        current_user.last_drop_date = datetime.utcnow()
+
+    # Get the User's Drop Limit based off their Subscription Tier    
+    try:
+        tier = SubscriptionTier(current_user.subscription_tier)
+    except ValueError:
+        tier = SubscriptionTier.FREE
+    drop_limit = DROP_LIMITS.get(tier, DROP_LIMITS[SubscriptionTier.FREE])
+
+
+    # Enforce the Drop Limit
+    if current_user.daily_drop_count >= drop_limit:
+        raise HTTPException(status_code=403, detail="Daily drop limit reached.")
+
+    # Drop the Message
     new_message = Message(
         text=payload.text,
         user_id=current_user.id,
@@ -23,7 +44,9 @@ def drop_message(payload: MessageInput, db: Session = Depends(get_db), current_u
         location=func.ST_SetSRID(func.ST_MakePoint(payload.longitude, payload.latitude), 4326),
         created_at=datetime.utcnow()
     )
+    current_user.daily_drop_count += 1
     db.add(new_message)
+    db.add(current_user)
     db.commit()
     db.refresh(new_message)
 

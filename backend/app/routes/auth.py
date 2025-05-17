@@ -42,7 +42,6 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    # Verify the login attempt
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
@@ -50,11 +49,17 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
             detail="Invalid email or password"
         )
 
-    # Create the access token
-    token = create_access_token(data={"sub": str(user.id)})
+    # Generate an access token
+    access_token = create_access_token(data={"sub": str(user.id)})
+
+    # Generate a refresh token
+    refresh_token = str(uuid.uuid4())
+    db.add(RefreshToken(token=refresh_token, user_id=user.id))
+    db.commit()
 
     return {
-        "access_token": token,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
         "token_type": "bearer",
         "user_id": str(user.id),
         "email": user.email

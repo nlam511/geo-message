@@ -15,3 +15,6 @@ class LoginRequest(BaseModel):
 
 class RefreshRequest(BaseModel):
     token: str
+
+class PushTokenRequest(BaseModel):
+    push_token: str

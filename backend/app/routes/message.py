@@ -111,15 +111,14 @@ def nearby_messages(
 def collect_message(
     message_id: str,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     # Get the message
     message = db.query(Message).filter(Message.id == message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
 
-    # TODO: Collecting own message makes it easy to developement/test so commenting this out.  Uncomment Later.
-    # # Prevent collecting own message
+    # TODO: Uncomment this in production to prevent collecting your own message
     # if message.user_id == current_user.id:
     #     raise HTTPException(status_code=400, detail="You cannot collect your own message")
 
@@ -132,7 +131,7 @@ def collect_message(
     if already_collected:
         raise HTTPException(status_code=400, detail="You have already collected this message")
 
-    # Insert collected message
+    # Insert new collected message
     new_collection = CollectedMessage(
         user_id=current_user.id,
         message_id=message_id,
@@ -140,6 +139,24 @@ def collect_message(
     )
     db.add(new_collection)
     db.commit()
+
+    # Send push notification to message owner (if not self)
+    if message.user_id != current_user.id:
+        owner = db.query(User).filter(User.id == message.user_id).first()
+        if owner and owner.push_tokens:
+            client = PushClient()
+            messages = [
+                PushMessage(
+                    to=token.token,
+                    body="📥 Your message was just collected!",
+                    data={"message_id": str(message.id)}
+                )
+                for token in owner.push_tokens
+            ]
+            try:
+                client.publish_multiple(messages)
+            except Exception as e:
+                print("⚠️ Failed to send push notification:", e)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -163,7 +180,6 @@ def uncollect_message(
         db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
 
 
 @router.post("/{message_id}/hide")

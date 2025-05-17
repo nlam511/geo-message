@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.db_session import get_db
 from app.models import User, Message, CollectedMessage, RefreshToken
 from app.utils.auth import hash_password, verify_password, create_access_token, get_current_user
-from app.schemas import UserCreate, LoginRequest, RefreshRequest
+from app.schemas import UserCreate, LoginRequest, RefreshRequest, PushTokenRequest
 from app.enums import SubscriptionTier
 from app.tier_limits import DROP_LIMITS
 from datetime import datetime, date
@@ -132,3 +132,22 @@ def get_user_profile(
         "messages_collected": collected_count,
         "daily_drops_remaining": daily_drops_remaining,
     }
+
+@router.post("/push-token")
+def save_push_token(
+    payload: PushTokenRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    if not payload.push_token.startswith("ExponentPushToken["):
+        raise HTTPException(status_code=400, detail="Invalid Expo push token")
+
+    # Avoid duplicates
+    existing = db.query(PushToken).filter(PushToken.token == payload.push_token).first()
+    if existing:
+        return {"status": "ok", "message": "Token already saved"}
+
+    new_token = PushToken(user_id=user.id, token=payload.push_token)
+    db.add(new_token)
+    db.commit()
+    return {"status": "success", "message": "Push token saved"}

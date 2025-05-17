@@ -59,8 +59,11 @@ export default function RegisterScreen() {
 
       // 3️⃣ Store tokens securely
       await SecureStore.setItemAsync('user_token', loginData.access_token);
+
       if (loginData.refresh_token) {
         await SecureStore.setItemAsync('refresh_token', loginData.refresh_token);
+      } else {
+        console.warn('⚠️ No refresh_token received during login');
       }
 
       // 4️⃣ Navigate to home screen

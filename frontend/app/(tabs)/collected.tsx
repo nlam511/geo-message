@@ -17,6 +17,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { uncollectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
+import { authFetch } from '@/api/authFetch';
 
 export default function CollectedScreen() {
     const [messages, setMessages] = useState<any[]>([]);
@@ -28,21 +29,9 @@ export default function CollectedScreen() {
     const fetchCollectedMessages = useCallback(async () => {
         try {
             if (selectedMessage) return;
-
-            const token = await SecureStore.getItemAsync('user_token');
-            if (!token) {
-                Alert.alert('Not logged in', 'Please log in to see your collected messages.');
-                return;
-            }
-
+    
             const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-            const response = await fetch(`${backendUrl}/message/collected`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
+            const response = await authFetch(`${backendUrl}/message/collected`);
             const data = await response.json();
             setMessages(data);
             console.log('✅ Refreshed collected messages');

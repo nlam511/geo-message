@@ -12,14 +12,12 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
-import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
 import { collectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { authFetch } from '@/api/authFetch';
-import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
 const REFRESH_INTERVAL_MS = 30000;
@@ -35,16 +33,13 @@ export default function NearbyScreen() {
 
     const refreshMessages = useCallback(async () => {
         try {
-            const token = await SecureStore.getItemAsync("user_token");
-            if (!token) return;
-
             const location = await Location.getCurrentPositionAsync({});
             const backendUrl = Constants.expoConfig?.extra?.backendUrl;
             const response = await authFetch(
                 `${backendUrl}/message/nearby?latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`
             );
 
-            if (!response.ok) throw new Error("Failed to fetch nearby messages");
+            if (!response.ok) throw new Error('Failed to fetch nearby messages');
 
             const data = await response.json();
             setMessages(data);
@@ -56,8 +51,8 @@ export default function NearbyScreen() {
                 longitudeDelta: 0.002,
             });
         } catch (error) {
-            console.error("Error refreshing messages:", error);
-            Alert.alert("❌ Failed to refresh messages.");
+            console.error('Error refreshing messages:', error);
+            Alert.alert('❌ Failed to refresh messages.');
         }
     }, []);
 
@@ -67,7 +62,7 @@ export default function NearbyScreen() {
         setRefreshing(false);
         Toast.show({
             type: 'success',
-            text1: ' Message Refreshed!',
+            text1: 'Message Refreshed!',
             visibilityTime: 1500,
             topOffset: insets.top,
         });
@@ -75,20 +70,20 @@ export default function NearbyScreen() {
 
     const handleCollect = async (id: string) => {
         const result = await collectMessage(id);
-        if (result.status === "success") {
+        if (result.status === 'success') {
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             await refreshMessages();
             setSelectedMessage(null);
             Toast.show({
                 type: 'success',
-                text1: ' Message Collected!',
+                text1: 'Message Collected!',
                 visibilityTime: 1500,
                 topOffset: insets.top,
             });
         } else {
             Toast.show({
                 type: 'error',
-                text1: ' Failed to Collect Message',
+                text1: 'Failed to Collect Message',
                 visibilityTime: 1500,
                 topOffset: insets.top,
             });
@@ -97,20 +92,20 @@ export default function NearbyScreen() {
 
     const handleHide = async (id: string) => {
         const result = await hideMessage(id);
-        if (result.status === "success") {
+        if (result.status === 'success') {
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             await refreshMessages();
             setSelectedMessage(null);
             Toast.show({
                 type: 'success',
-                text1: ' Message Hidden!',
+                text1: 'Message Hidden!',
                 visibilityTime: 1500,
                 topOffset: insets.top,
             });
         } else {
             Toast.show({
                 type: 'error',
-                text1: ' Failed to Hide Message',
+                text1: 'Failed to Hide Message',
                 visibilityTime: 1500,
                 topOffset: insets.top,
             });
@@ -122,13 +117,9 @@ export default function NearbyScreen() {
             let timeoutId: ReturnType<typeof setTimeout>;
 
             const poll = async () => {
-                const token = await SecureStore.getItemAsync("user_token");
-                if (!token) return;
-
                 if (!selectedMessage && !isSwiping) {
                     await refreshMessages();
                 }
-
                 timeoutId = setTimeout(poll, REFRESH_INTERVAL_MS);
             };
 
@@ -137,40 +128,39 @@ export default function NearbyScreen() {
         }, [refreshMessages, selectedMessage, isSwiping])
     );
 
-    // Swipe actions with animated icon (Spotify style)
     const renderLeftActions = (
         _progress: Animated.AnimatedInterpolation<number>,
         dragX: Animated.AnimatedInterpolation<number>
-      ) => {
+    ) => {
         const opacity = dragX.interpolate({
-          inputRange: [0, 64],
-          outputRange: [0, 1],
-          extrapolate: 'clamp',
+            inputRange: [0, 64],
+            outputRange: [0, 1],
+            extrapolate: 'clamp',
         });
-      
+
         return (
-          <Animated.View style={[styles.fullSwipeAction, { backgroundColor: '#FF3B30', opacity }]}>
-            <Text style={styles.swipeText}>Hide</Text>
-          </Animated.View>
+            <Animated.View style={[styles.fullSwipeAction, { backgroundColor: '#FF3B30', opacity }]}>
+                <Text style={styles.swipeText}>Hide</Text>
+            </Animated.View>
         );
-      };
-      
-      const renderRightActions = (
+    };
+
+    const renderRightActions = (
         _progress: Animated.AnimatedInterpolation<number>,
         dragX: Animated.AnimatedInterpolation<number>
-      ) => {
+    ) => {
         const opacity = dragX.interpolate({
-          inputRange: [-64, 0],
-          outputRange: [1, 0],
-          extrapolate: 'clamp',
+            inputRange: [-64, 0],
+            outputRange: [1, 0],
+            extrapolate: 'clamp',
         });
-      
+
         return (
-          <Animated.View style={[styles.fullSwipeAction, { backgroundColor: '#007AFF', opacity }]}>
-            <Text style={styles.swipeText}>Collect</Text>
-          </Animated.View>
+            <Animated.View style={[styles.fullSwipeAction, { backgroundColor: '#007AFF', opacity }]}>
+                <Text style={styles.swipeText}>Collect</Text>
+            </Animated.View>
         );
-      };
+    };
 
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
@@ -282,7 +272,7 @@ const styles = StyleSheet.create({
         padding: 12,
         backgroundColor: '#f9f9f9',
         height: 64,
-        width: '100%'
+        width: '100%',
     },
     messageText: { fontSize: 16, marginBottom: 4 },
     meta: { fontSize: 12, color: 'gray' },
@@ -291,43 +281,67 @@ const styles = StyleSheet.create({
     bottomHalf: { flex: 1, backgroundColor: 'white', paddingBottom: 20 },
     mapView: { flex: 1, width: '100%', height: '100%' },
     mapLoading: { justifyContent: 'center', alignItems: 'center' },
-    swipeIconContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: 80,
-        height: 64, // same as row height
-        backgroundColor: 'transparent', // no background
-    },
-
-    iconBubble: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
         justifyContent: 'center',
         alignItems: 'center',
     },
-
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
-    modalContent: { width: '85%', backgroundColor: 'white', borderRadius: 12, padding: 20, alignItems: 'center' },
+    modalContent: {
+        width: '85%',
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 20,
+        alignItems: 'center',
+    },
     modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
     modalText: { fontSize: 16, marginBottom: 10 },
     modalMeta: { fontSize: 14, color: 'gray', marginBottom: 20 },
-    modalCloseIcon: { position: 'absolute', top: 10, right: 10, zIndex: 10, backgroundColor: '#ff3b30', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
-    modalCloseText: { color: 'white', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
-    collectButton: { backgroundColor: '#007AFF', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+    modalCloseIcon: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 10,
+        backgroundColor: '#ff3b30',
+        borderRadius: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+    },
+    modalCloseText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    collectButton: {
+        backgroundColor: '#007AFF',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 8,
+    },
     collectButtonText: { color: 'white', fontWeight: '600', fontSize: 16 },
-    hideButton: { backgroundColor: '#FF3B30', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, marginTop: 10 },
-    hideButtonText: { color: 'white', fontSize: 16, fontWeight: '500', textAlign: 'center' },
+    hideButton: {
+        backgroundColor: '#FF3B30',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        marginTop: 10,
+    },
+    hideButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+        textAlign: 'center',
+    },
     fullSwipeAction: {
         justifyContent: 'center',
         alignItems: 'center',
         width: 80,
         height: '100%',
-      },
-      
-      swipeText: {
+    },
+    swipeText: {
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
-      },
+    },
 });

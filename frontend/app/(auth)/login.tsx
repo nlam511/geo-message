@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
@@ -24,11 +33,15 @@ export default function LoginScreen() {
       });
 
       const data = await response.json();
-      console.log("🔐 Login response:", data);
+      console.log('🔐 Login response:', data);
 
       if (response.ok) {
+        // ✅ Store both tokens under expected keys
         await SecureStore.setItemAsync('user_token', data.access_token);
-        router.replace('/'); // ✅ Navigate to main app
+        await SecureStore.setItemAsync('refresh_token', data.refresh_token);
+
+        // ✅ Navigate to main app
+        router.replace('/');
       } else {
         Alert.alert('❌ Login failed', data.detail || 'Unknown error');
       }
@@ -39,7 +52,10 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <Text style={styles.title}>Login to Geo-Message</Text>
 
       <TextInput
@@ -62,6 +78,7 @@ export default function LoginScreen() {
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
+
       <View style={styles.linkContainer}>
         <TouchableOpacity onPress={() => router.push('/forgot-password')}>
           <Text style={styles.linkText}>Forgot Password?</Text>
@@ -70,7 +87,6 @@ export default function LoginScreen() {
         <TouchableOpacity onPress={() => router.push('/register')}>
           <Text style={styles.linkText}>Don't have an account? Register</Text>
         </TouchableOpacity>
-
       </View>
     </KeyboardAvoidingView>
   );
@@ -119,5 +135,4 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 15,
   },
-
 });

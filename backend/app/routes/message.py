@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.db_session import get_db
-from app.models import Message, CollectedMessage, HiddenMessage
+from app.models import Message, CollectedMessage, HiddenMessage, PushToken
 from datetime import datetime, date
 from app.utils.geo import calculate_distance
 from app.utils.auth import get_current_user
@@ -10,6 +10,8 @@ from app.schemas import MessageInput
 from geoalchemy2.shape import to_shape
 from app.enums import SubscriptionTier
 from app.tier_limits import DROP_LIMITS
+from app.logger import logger
+from app.utils.push_notifications import send_push_notification
 
 
 router = APIRouter(prefix="/message", tags=["Messages"])
@@ -140,23 +142,20 @@ def collect_message(
     db.add(new_collection)
     db.commit()
 
-    # Send push notification to message owner (if not self)
-    if message.user_id != current_user.id:
-        owner = db.query(User).filter(User.id == message.user_id).first()
-        if owner and owner.push_tokens:
-            client = PushClient()
-            messages = [
-                PushMessage(
-                    to=token.token,
-                    body="📥 Your message was just collected!",
-                    data={"message_id": str(message.id)}
-                )
-                for token in owner.push_tokens
-            ]
-            try:
-                client.publish_multiple(messages)
-            except Exception as e:
-                print("⚠️ Failed to send push notification:", e)
+     # ✅ Send push notification to the message owner
+    push_tokens = (
+        db.query(PushToken.token)
+        .filter(PushToken.user_id == message.user_id)
+        .all()
+    )
+
+    logger.info(f"Sending push notifications to {push_tokens}")
+
+    for token_row in push_tokens:
+        token = token_row.token
+        message_text = f"📬 Your message was just collected!"
+        send_push_notification(token, message_text)
+
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

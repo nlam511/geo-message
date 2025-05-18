@@ -16,6 +16,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
+import { registerPushNotificationsAsync } from '@/utils/registerPushNotificationsAsync';
 
 
 export default function RegisterScreen() {
@@ -72,6 +73,10 @@ export default function RegisterScreen() {
       } else {
         console.warn('⚠️ No refresh_token received during login');
       }
+
+      // Register device for push notifications
+      await registerPushNotificationsAsync();
+      
       await refresh();
       
       console.log(`Logged in from registration page successfully.`);

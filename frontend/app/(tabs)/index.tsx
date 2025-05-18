@@ -76,63 +76,94 @@ export default function NearbyScreen() {
     };
 
     const handleCollect = async (id: string) => {
-        const result = await collectMessage(id);
-        if (result.status === 'success') {
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            await refreshMessages();
-            setSelectedMessage(null);
-            Toast.show({
-                type: 'success',
-                text1: 'Message Collected!',
-                visibilityTime: 1500,
-                topOffset: insets.top,
-            });
-        } else {
+        try {
+            setIsSwiping(true);
+            const result = await collectMessage(id);
+            if (result.status === 'success') {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                await refreshMessages();
+                setSelectedMessage(null);
+                Toast.show({
+                    type: 'success',
+                    text1: 'Message Collected!',
+                    visibilityTime: 1500,
+                    topOffset: insets.top,
+                });
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Failed to Collect Message',
+                    visibilityTime: 1500,
+                    topOffset: insets.top,
+                });
+            }
+        } catch (error) {
+            console.error('Collect crash:', error);
             Toast.show({
                 type: 'error',
-                text1: 'Failed to Collect Message',
+                text1: 'Error during collect',
                 visibilityTime: 1500,
                 topOffset: insets.top,
             });
+        } finally {
+            setIsSwiping(false);
         }
     };
 
     const handleHide = async (id: string) => {
-        const result = await hideMessage(id);
-        if (result.status === 'success') {
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            await refreshMessages();
-            setSelectedMessage(null);
-            Toast.show({
-                type: 'success',
-                text1: 'Message Hidden!',
-                visibilityTime: 1500,
-                topOffset: insets.top,
-            });
-        } else {
+        try {
+            setIsSwiping(true);
+            const result = await hideMessage(id);
+            if (result.status === 'success') {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                setMessages((prev) => prev.filter((msg) => msg.id !== id));
+                setSelectedMessage(null);
+                Toast.show({
+                    type: 'success',
+                    text1: 'Message Hidden!',
+                    visibilityTime: 1500,
+                    topOffset: insets.top,
+                });
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Failed to Hide Message',
+                    visibilityTime: 1500,
+                    topOffset: insets.top,
+                });
+            }
+        } catch (error) {
+            console.error('Hide crash:', error);
             Toast.show({
                 type: 'error',
-                text1: 'Failed to Hide Message',
+                text1: 'Error during hide',
                 visibilityTime: 1500,
                 topOffset: insets.top,
             });
+        } finally {
+            setIsSwiping(false);
         }
     };
 
+    // Constantly refresh messages
     useFocusEffect(
         useCallback(() => {
             console.log('📍 Routed to Nearby Page');
-            let timeoutId: ReturnType<typeof setTimeout>;
+            let isActive = true;
 
             const poll = async () => {
-                if (!selectedMessage && !isSwiping) {
+                if (!selectedMessage && !isSwiping && isActive) {
                     await refreshMessages();
                 }
-                timeoutId = setTimeout(poll, REFRESH_INTERVAL_MS);
             };
 
-            poll();
-            return () => clearTimeout(timeoutId);
+            const intervalId = setInterval(poll, REFRESH_INTERVAL_MS);
+            poll(); // trigger one immediately
+
+            return () => {
+                isActive = false;
+                clearInterval(intervalId);
+            };
         }, [refreshMessages, selectedMessage, isSwiping])
     );
 
@@ -211,12 +242,14 @@ export default function NearbyScreen() {
                             onSwipeableWillOpen={() => setIsSwiping(true)}
                             onSwipeableClose={() => setIsSwiping(false)}
                             onSwipeableOpen={(direction) => {
-                                if (direction === 'left') handleHide(item.id);
-                                if (direction === 'right') handleCollect(item.id);
+                                setTimeout(() => {
+                                    if (direction === 'left') handleHide(item.id);
+                                    if (direction === 'right') handleCollect(item.id);
+                                }, 200); // small delay allows swipe animation to finish
                             }}
                         >
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
-                                <View style={styles.messageBox}>
+                                <View style={[styles.messageBox, selectedMessage?.id === item.id && { backgroundColor: '#d0ebff' }]}>
                                     <Text style={styles.messageText}>{String(item.text)}</Text>
                                     <Text style={styles.meta}>
                                         📍 Lat: {item.latitude}, Lng: {item.longitude}

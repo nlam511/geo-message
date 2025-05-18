@@ -1,7 +1,7 @@
 from app.enums import SubscriptionTier
 
 DROP_LIMITS = {
-    SubscriptionTier.FREE: 10,
+    SubscriptionTier.FREE: 90,
     SubscriptionTier.PRO: 20,
     SubscriptionTier.GOLD: 50,
 }

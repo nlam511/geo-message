@@ -43,14 +43,11 @@ python -m app.db
 TODOS:
 
 TOP PRIORITY
--- Implement Refresh Token to front end
--- Make it so you have to log in to use the app.
--- Make sure to handle the cases where a user's token expire in the middle of using the app/ the refresh token retrieval doesnt work.
 -- the Nearby Page is still really buggy.  Got to fix this
--- Push Notification when someone collects your message.
--- CORS?
 -- Index the location column?
 
+
+Test push notification stuff on multiple devices
 
 Not So Urgent
 -- Tags on Messages.

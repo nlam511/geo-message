@@ -1,11 +1,18 @@
-// app/(auth)/forgot-password.tsx
-
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useCallback } from 'react';
+import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ForgotPasswordScreen() {
     const router = useRouter();
+
+      useFocusEffect(
+        useCallback(() => {
+          console.log('🔐 Routed to Forgot Password Page');
+        }, [])
+      );
+
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>🔐 Forgot Password</Text>

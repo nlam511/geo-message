@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db_session import get_db
-from app.models import User, Message, CollectedMessage, RefreshToken
+from app.models import User, Message, CollectedMessage, RefreshToken, PushToken
 from app.utils.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.schemas import UserCreate, LoginRequest, RefreshRequest, PushTokenRequest
 from app.enums import SubscriptionTier

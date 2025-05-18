@@ -46,7 +46,11 @@
       "expo-secure-store"
     ],
     "extra": {
-      "backendUrl": "http://10.0.0.72:8000"
+      "backendUrl": "http://10.0.0.72:8000",
+      "router": {},
+      "eas": {
+        "projectId": "c8f93dd7-9ed1-4f38-b96c-f6125c124b34"
+      }
     },
     "experiments": {
       "typedRoutes": true

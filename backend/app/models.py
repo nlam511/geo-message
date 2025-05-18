@@ -31,7 +31,6 @@ class User(Base):
 
     subscription_tier = Column(SQLAlchemyEnum(SubscriptionTier), default=SubscriptionTier.FREE, nullable=False)
 
-
     # Daily drop tracking
     daily_drop_count = Column(Integer, default=0)
     last_drop_date = Column(DateTime, nullable=True)
@@ -48,6 +47,19 @@ class User(Base):
 
     # One-to-many: A user can have multiple refresh tokens
     refresh_tokens = relationship("RefreshToken", back_populates="user")
+
+    push_tokens = relationship("PushToken", back_populates="user", cascade="all, delete-orphan")
+
+
+class PushToken(Base):
+    __tablename__ = "push_tokens"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4) 
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    token = Column(String, nullable=False, unique=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="push_tokens")
 
 
 class Message(Base):

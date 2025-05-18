@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import { router } from 'expo-router';
 import { authFetch } from '@/api/authFetch';
+import Constants from 'expo-constants';
 
 interface UserInfo {
     id: string;
@@ -26,34 +27,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const logout = async () => {
         try {
             const refreshToken = await SecureStore.getItemAsync('refresh_token');
-            const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+            const backendUrl = Constants.expoConfig?.extra?.backendUrl;
 
-            await authFetch(`${backendUrl}/auth/logout`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: refreshToken }),
-            });
+            if (refreshToken) {
+                await authFetch(`${backendUrl}/auth/logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: refreshToken }),
+                });
+            }
         } catch (err) {
-            console.warn('Logout failed silently:', err);
+            console.warn('Logout request error (ignored):', err);
         }
 
         await SecureStore.deleteItemAsync('user_token');
         await SecureStore.deleteItemAsync('refresh_token');
         setUser(null);
-        router.replace('/login');
+        router.replace('/(auth)/login'); // Make sure this matches your routing
     };
 
     const refresh = async () => {
         const token = await SecureStore.getItemAsync('user_token');
-        if (!token) return logout();
+        if (!token) {
+            console.warn('🔐 No user_token found. Logging out.');
+            return logout();
+        }
 
         try {
             const decoded = jwtDecode<{ exp: number }>(token);
             const isExpired = decoded.exp * 1000 < Date.now();
+            const backendUrl = Constants.expoConfig?.extra?.backendUrl;
 
             if (isExpired) {
                 const refreshToken = await SecureStore.getItemAsync('refresh_token');
-                const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+                if (!refreshToken) {
+                    console.warn('🔁 Token expired, but no refresh token found. Logging out.');
+                    return logout();
+                }
 
                 const response = await fetch(`${backendUrl}/auth/refresh`, {
                     method: 'POST',
@@ -61,29 +71,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     body: JSON.stringify({ token: refreshToken }),
                 });
 
-                if (!response.ok) return logout();
+                if (!response.ok) {
+                    console.warn('🔁 Refresh token invalid. Logging out.');
+                    return logout();
+                }
 
                 const data = await response.json();
                 await SecureStore.setItemAsync('user_token', data.access_token);
             }
 
-            const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
             const res = await authFetch(`${backendUrl}/auth/me`);
+            if (!res.ok) throw new Error('Failed to fetch /auth/me');
+
             const data = await res.json();
             setUser({ id: data.id, email: data.email });
         } catch (err) {
-            console.warn('Auth refresh failed:', err);
-            logout();
+            console.warn('❌ Auth refresh failed:', err);
+            await logout(); // Ensure cleanup, but avoid throwing
         }
     };
 
     useEffect(() => {
         const init = async () => {
+            const token = await SecureStore.getItemAsync('user_token');
+            if (!token) {
+                console.log('🛑 No token at startup. Skipping refresh.');
+                setIsAuthLoading(false);
+                return;
+            }
+
             await refresh();
             setIsAuthLoading(false);
         };
         init();
     }, []);
+
 
     const contextValue: AuthContextType = {
         user,
@@ -94,10 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value= { contextValue } >
-        { children }
+        <AuthContext.Provider value={contextValue}>
+            {children}
         </AuthContext.Provider>
-  );
+    );
 }
 
 export function useAuth() {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,15 @@ import {
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import { useAuth } from '@/hooks/useAuth';
+
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
+  const { refresh } = useAuth();
 
   const handleRegister = async () => {
     if (!email || !password) {
@@ -43,12 +47,15 @@ export default function RegisterScreen() {
         return;
       }
 
+      console.log(`✅ Registered user ${email} successfully.`);
+
       // 2️⃣ Attempt login immediately after registration
       const loginRes = await fetch(`${backendUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
+      
 
       const loginData = await loginRes.json();
 
@@ -65,6 +72,9 @@ export default function RegisterScreen() {
       } else {
         console.warn('⚠️ No refresh_token received during login');
       }
+      await refresh();
+      
+      console.log(`Logged in from registration page successfully.`);
 
       // 4️⃣ Navigate to home screen
       router.replace('/');
@@ -74,6 +84,13 @@ export default function RegisterScreen() {
       Alert.alert('❌ Error', 'Unable to connect to server.');
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Routed to Registration Page');
+    }, [])
+  );
+
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

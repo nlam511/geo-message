@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,14 @@ import {
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
+import { registerPushNotificationsAsync } from '@/utils/registerPushNotificationsAsync';
+import { useAuth } from '@/hooks/useAuth';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { refresh } = useAuth(); // ✅ this gives you the method to trigger context update  
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -40,8 +44,11 @@ export default function LoginScreen() {
         await SecureStore.setItemAsync('user_token', data.access_token);
         await SecureStore.setItemAsync('refresh_token', data.refresh_token);
 
-        // ✅ Navigate to main app
-        router.replace('/');
+        // Register device for push notifications
+        await registerPushNotificationsAsync();
+
+        // ✅ Tell the auth context to refresh its state
+        await refresh();
       } else {
         Alert.alert('❌ Login failed', data.detail || 'Unknown error');
       }
@@ -50,6 +57,12 @@ export default function LoginScreen() {
       Alert.alert('❌ Error', 'Unable to connect to server.');
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🔐 Routed to Login Page');
+    }, [])
+  );
 
   return (
     <KeyboardAvoidingView

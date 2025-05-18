@@ -33,6 +33,13 @@ export default function NearbyScreen() {
 
     const refreshMessages = useCallback(async () => {
         try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+
+            if (status !== 'granted') {
+                Alert.alert('Location Required', 'Please enable location to see nearby messages.');
+                return;
+            }
+
             const location = await Location.getCurrentPositionAsync({});
             const backendUrl = Constants.expoConfig?.extra?.backendUrl;
             const response = await authFetch(
@@ -114,6 +121,7 @@ export default function NearbyScreen() {
 
     useFocusEffect(
         useCallback(() => {
+            console.log('📍 Routed to Nearby Page');
             let timeoutId: ReturnType<typeof setTimeout>;
 
             const poll = async () => {

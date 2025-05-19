@@ -45,7 +45,7 @@ TODOS:
 TOP PRIORITY
 -- the Nearby Page is still really buggy.  Got to fix this
 -- Index the location column?
-
+-- entering a non email for login/registration seems to crash
 
 Test push notification stuff on multiple devices
 Prevent DDOS on backend
@@ -68,7 +68,7 @@ Not So Urgent
 -- Subscription Model
 -- if no one interacts with a message after x amount of time. delete it?
 -- test the relationship stuff, i dont quite understand it
-
+-- to prevent spam registration, do the email code verification
 
 Premimum features
 - More Messages

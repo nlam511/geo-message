@@ -48,6 +48,10 @@ TOP PRIORITY
 
 
 Test push notification stuff on multiple devices
+Prevent DDOS on backend
+Prevent Spam account registration
+Somehow allow for me to drop mass messages.
+
 
 Not So Urgent
 -- Tags on Messages.
@@ -83,3 +87,4 @@ Store
 - Radius Boost
 - Markers/Profile Borders/ Message Borders
 - Map Themes
+- Message Expiry Date Extension

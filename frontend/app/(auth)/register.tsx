@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { registerPushNotificationsAsync } from '@/utils/registerPushNotificationsAsync';
+import { Ionicons } from '@expo/vector-icons';
 
 
 export default function RegisterScreen() {
@@ -110,8 +111,11 @@ export default function RegisterScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-
+        <TouchableOpacity onPress={router.back} style={{ paddingTop: 50 }}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
         <View style={styles.logocontainer}>
+
           <Image
             source={require('@/assets/images/fishy@3x-80.jpg')}
             style={styles.logo}
@@ -130,15 +134,6 @@ export default function RegisterScreen() {
           <TouchableOpacity style={styles.button} onPress={handleRegister}>
             <Text style={styles.buttonText}>Sign In</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => router.push('/forgot-password')}>
-            <Text style={styles.linkText} >Forgot password?</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => router.push('/register')}>
-            <Text style={styles.linkText} >Don't have an account? Register here</Text>
-          </TouchableOpacity>
-
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -155,7 +150,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 150,
     height: 150,
-    marginTop: 60
+    marginTop: 10
   },
   logocontainer: {
     alignItems: 'center',
@@ -201,11 +196,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-  },
-  linkText: {
-    color: 'black',
-    // textDecorationLine: 'underline',
-    fontSize: 15,
-    marginTop: 6,
   },
 });

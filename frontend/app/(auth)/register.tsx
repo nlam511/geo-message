@@ -160,7 +160,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    marginTop: -10
+    marginTop: -10,
+    fontFamily: 'ShortStack_400Regular',
   },
   form: {
     width: '95%',
@@ -174,6 +175,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
+    fontFamily: 'ShortStack_400Regular',
   },
   input: {
     height: 44,
@@ -183,6 +185,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 12,
     fontSize: 16,
+    fontFamily: 'ShortStack_400Regular',
   },
   button: {
     backgroundColor: 'black',
@@ -196,5 +199,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ShortStack_400Regular',
   },
 });

@@ -30,6 +30,12 @@ export default function LoginScreen() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Please enter a valid email address');
+      return;
+    }
+
     try {
       const backendUrl = Constants.expoConfig?.extra?.backendUrl;
       const response = await fetch(`${backendUrl}/auth/login`, {

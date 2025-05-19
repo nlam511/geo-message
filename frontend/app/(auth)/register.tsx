@@ -35,6 +35,12 @@ export default function RegisterScreen() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Please enter a valid email address');
+      return;
+    }
+
     if (email !== confirmEmail) {
       Alert.alert('Emails don\'t match.  Please try again.');
       return;

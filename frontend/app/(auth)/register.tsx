@@ -10,6 +10,8 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  ScrollView,
+  Image,
 } from 'react-native';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
@@ -21,13 +23,19 @@ import { registerPushNotificationsAsync } from '@/utils/registerPushNotification
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
+  const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
   const { refresh } = useAuth();
 
   const handleRegister = async () => {
-    if (!email || !password) {
+    if (!email || !confirmEmail || !password) {
       Alert.alert('Please fill out all fields');
+      return;
+    }
+
+    if (email !== confirmEmail) {
+      Alert.alert('Emails don\'t match.  Please try again.');
       return;
     }
 
@@ -56,7 +64,7 @@ export default function RegisterScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      
+
 
       const loginData = await loginRes.json();
 
@@ -76,9 +84,9 @@ export default function RegisterScreen() {
 
       // Register device for push notifications
       await registerPushNotificationsAsync();
-      
+
       await refresh();
-      
+
       console.log(`Logged in from registration page successfully.`);
 
       // 4️⃣ Navigate to home screen
@@ -97,81 +105,144 @@ export default function RegisterScreen() {
   );
 
 
+  // return (
+  //   <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+  //     <KeyboardAvoidingView
+  //       style={styles.container}
+  //       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  //     >
+  //       <Text style={styles.title}>Register</Text>
+
+  //       <TextInput
+  //         style={styles.input}
+  //         placeholder="Email"
+  //         autoCapitalize="none"
+  //         keyboardType="email-address"
+  //         value={email}
+  //         onChangeText={setEmail}
+  //       />
+
+  //       <TextInput
+  //         style={styles.input}
+  //         placeholder="Password"
+  //         secureTextEntry
+  //         value={password}
+  //         onChangeText={setPassword}
+  //       />
+
+  //       <TouchableOpacity style={styles.button} onPress={handleRegister}>
+  //         <Text style={styles.buttonText}>Create Account</Text>
+  //       </TouchableOpacity>
+
+  //       <TouchableOpacity onPress={() => router.back()}>
+  //         <Text style={styles.link}>← Go back to Login</Text>
+  //       </TouchableOpacity>
+  //     </KeyboardAvoidingView>
+  //   </TouchableWithoutFeedback>
+  // );
+
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <Text style={styles.title}>Register</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
+        <View style={styles.logocontainer}>
+          <Image
+            source={require('@/assets/images/fishy@3x-80.jpg')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Droppings</Text>
+        </View>
+        <View style={styles.form}>
+          <Text style={styles.formLabel}>Register</Text>
+          <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#999" value={email}
+            onChangeText={setEmail} />
+          <TextInput style={styles.input} placeholder="Confirm Email" placeholderTextColor="#999" value={confirmEmail}
+            onChangeText={setConfirmEmail} />
+          <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#999" secureTextEntry value={password}
+            onChangeText={setPassword} />
+          <TouchableOpacity style={styles.button} onPress={handleRegister}>
+            <Text style={styles.buttonText}>Sign In</Text>
+          </TouchableOpacity>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+          <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+            <Text style={styles.linkText} >Forgot password?</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={handleRegister}>
-          <Text style={styles.buttonText}>Create Account</Text>
-        </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/register')}>
+            <Text style={styles.linkText} >Don't have an account? Register here</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.link}>← Go back to Login</Text>
-        </TouchableOpacity>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     padding: 24,
     backgroundColor: 'white',
   },
+  logo: {
+    width: 150,
+    height: 150,
+    marginTop: 60
+  },
+  logocontainer: {
+    alignItems: 'center',
+    backgroundColor: '',
+    marginBottom: 30,
+  },
   title: {
-    fontSize: 28,
-    marginBottom: 20,
-    textAlign: 'center',
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginTop: -10
+  },
+  form: {
+    width: '95%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  formLabel: {
+    fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    marginBottom: 16,
   },
   input: {
-    borderColor: '#ccc',
+    height: 44,
     borderWidth: 1,
-    padding: 12,
-    marginBottom: 16,
+    borderColor: '#ccc',
     borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    fontSize: 16,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: 'black',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
+    marginBottom: 5,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
-  link: {
-    marginTop: 20,
-    fontSize: 16,
-    color: '#007AFF',
-    textAlign: 'center',
+  linkText: {
+    color: 'black',
+    // textDecorationLine: 'underline',
+    fontSize: 15,
+    marginTop: 6,
   },
 });

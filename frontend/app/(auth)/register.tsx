@@ -104,43 +104,6 @@ export default function RegisterScreen() {
     }, [])
   );
 
-
-  // return (
-  //   <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-  //     <KeyboardAvoidingView
-  //       style={styles.container}
-  //       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-  //     >
-  //       <Text style={styles.title}>Register</Text>
-
-  //       <TextInput
-  //         style={styles.input}
-  //         placeholder="Email"
-  //         autoCapitalize="none"
-  //         keyboardType="email-address"
-  //         value={email}
-  //         onChangeText={setEmail}
-  //       />
-
-  //       <TextInput
-  //         style={styles.input}
-  //         placeholder="Password"
-  //         secureTextEntry
-  //         value={password}
-  //         onChangeText={setPassword}
-  //       />
-
-  //       <TouchableOpacity style={styles.button} onPress={handleRegister}>
-  //         <Text style={styles.buttonText}>Create Account</Text>
-  //       </TouchableOpacity>
-
-  //       <TouchableOpacity onPress={() => router.back()}>
-  //         <Text style={styles.link}>← Go back to Login</Text>
-  //       </TouchableOpacity>
-  //     </KeyboardAvoidingView>
-  //   </TouchableWithoutFeedback>
-  // );
-
   return (
     <KeyboardAvoidingView
       style={styles.container}

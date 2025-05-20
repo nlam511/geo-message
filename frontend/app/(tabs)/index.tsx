@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     Modal,
     Animated,
+    Image,
 } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
@@ -19,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { authFetch } from '@/api/authFetch';
 import Toast from 'react-native-toast-message';
+import { avatarMap } from '@/utils/avatarMap';
 
 const REFRESH_INTERVAL_MS = 30000;
 
@@ -245,15 +247,21 @@ export default function NearbyScreen() {
                                 setTimeout(() => {
                                     if (direction === 'left') handleHide(item.id);
                                     if (direction === 'right') handleCollect(item.id);
-                                }, 200); // small delay allows swipe animation to finish
+                                }, 200);
                             }}
                         >
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
-                                <View style={[styles.messageBox, selectedMessage?.id === item.id && { backgroundColor: '#d0ebff' }]}>
-                                    <Text style={styles.messageText}>{String(item.text)}</Text>
-                                    <Text style={styles.meta}>
-                                        📍 Lat: {item.latitude}, Lng: {item.longitude}
-                                    </Text>
+                                <View style={styles.contactRow}>
+                                    <Image
+                                        source={avatarMap[item.avatar ?? 'avatar1']}
+                                        style={styles.avatar}
+                                    />
+                                    <View style={styles.contactInfo}>
+                                        <Text style={styles.contactName}>{item.text}</Text>
+                                        <Text style={styles.contactEmail}>
+                                            📍 Lat: {item.latitude}, Lng: {item.longitude}
+                                        </Text>
+                                    </View>
                                 </View>
                             </TouchableOpacity>
                         </Swipeable>
@@ -384,5 +392,47 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
+    },
+    contactRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        backgroundColor: 'white',
+    },
+    avatarPlaceholder: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#ccc',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    avatarInitial: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
+    contactInfo: {
+        flex: 1,
+    },
+    contactName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#000',
+    },
+    contactEmail: {
+        fontSize: 14,
+        color: '#666',
+    },
+    avatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        marginRight: 12,
+        backgroundColor: '#ccc',
     },
 });

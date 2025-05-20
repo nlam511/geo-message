@@ -35,6 +35,9 @@ class User(Base):
     daily_drop_count = Column(Integer, default=0)
     last_drop_date = Column(DateTime, nullable=True)
 
+    # Profile Picture
+    profile_picture = Column(String, default="avatar1")
+
     # Relationships
     # One-to-many: A user can drop many messages
     messages = relationship("Message", back_populates="owner")

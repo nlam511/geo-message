@@ -7,11 +7,13 @@ from app.schemas import UserCreate, LoginRequest, RefreshRequest, PushTokenReque
 from app.enums import SubscriptionTier
 from app.tier_limits import DROP_LIMITS
 from datetime import datetime, date
+import random
 
 import uuid
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+DEFAULT_AVATARS = [f"avatar{i}.jpeg" for i in range(1, 4)]  # avatar1 to avatar4
 
 @router.post("/register")
 def register_user(payload: UserCreate, db: Session = Depends(get_db)):
@@ -27,7 +29,8 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     new_user = User(
         id=uuid.uuid4(),
         email=payload.email,
-        hashed_password=hash_password(payload.password)
+        hashed_password=hash_password(payload.password),
+        profile_picture = random.choice(DEFAULT_AVATARS)
     )
     db.add(new_user)
     db.commit()

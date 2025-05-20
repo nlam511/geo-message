@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     Modal,
     Animated,
+    Image,
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
@@ -18,6 +19,7 @@ import { uncollectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 import { authFetch } from '@/api/authFetch';
+import { avatarMap } from '@/utils/avatarMap';
 
 export default function CollectedScreen() {
     const [messages, setMessages] = useState<any[]>([]);
@@ -29,7 +31,7 @@ export default function CollectedScreen() {
     const fetchCollectedMessages = useCallback(async () => {
         try {
             if (selectedMessage) return;
-    
+
             const backendUrl = Constants.expoConfig?.extra?.backendUrl;
             const response = await authFetch(`${backendUrl}/message/collected`);
             const data = await response.json();
@@ -156,11 +158,17 @@ export default function CollectedScreen() {
                             }}
                         >
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
-                                <View style={styles.messageBox}>
-                                    <Text style={styles.messageText}>{item.text}</Text>
-                                    <Text style={styles.meta}>
-                                        🕓 Collected: {new Date(item.collected_at).toLocaleString()}
-                                    </Text>
+                                <View style={styles.contactRow}>
+                                    <Image
+                                        source={avatarMap[item.avatar ?? 'avatar1']}
+                                        style={styles.avatar}
+                                    />
+                                    <View style={styles.contactInfo}>
+                                        <Text style={styles.contactName}>{item.text}</Text>
+                                        <Text style={styles.contactEmail}>
+                                            📍 Lat: {item.latitude}, Lng: {item.longitude}
+                                        </Text>
+                                    </View>
                                 </View>
                             </TouchableOpacity>
                         </Swipeable>
@@ -315,5 +323,47 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
+    },
+    contactRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        backgroundColor: 'white',
+    },
+    avatarPlaceholder: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#ccc',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    avatarInitial: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
+    contactInfo: {
+        flex: 1,
+    },
+    contactName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#000',
+    },
+    contactEmail: {
+        fontSize: 14,
+        color: '#666',
+    },
+    avatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        marginRight: 12,
+        backgroundColor: '#ccc',
     },
 });

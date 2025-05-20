@@ -4,6 +4,7 @@ import { ActivityIndicator, View, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
 import { useFonts, ShortStack_400Regular } from '@expo-google-fonts/short-stack';
+import { StatusBar } from 'expo-status-bar';
 
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 
@@ -63,6 +64,7 @@ function AuthGate() {
 
   return (
     <>
+      <StatusBar style="dark" />
       <View style={{ flex: 1 }}>
         <Slot />
         <Toast />

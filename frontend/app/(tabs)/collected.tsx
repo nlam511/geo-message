@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 import { authFetch } from '@/api/authFetch';
 import { avatarMap } from '@/utils/avatarMap';
+import TopNavBar from '@/components/TopNavBar';
 
 export default function CollectedScreen() {
     const [messages, setMessages] = useState<any[]>([]);
@@ -139,9 +140,10 @@ export default function CollectedScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-            <View style={styles.container}>
-                <Text style={styles.title}>📥 Collected Messages</Text>
+        <SafeAreaView style={styles.container}>
+            <TopNavBar />
+            <View style={styles.inner}>
+                <Text style={styles.title}>Collected Messages</Text>
                 <FlatList
                     data={messages}
                     keyExtractor={(item) => item.id.toString()}
@@ -152,7 +154,6 @@ export default function CollectedScreen() {
                             onSwipeableOpen={(direction) => {
                                 if (direction === 'left') {
                                     handleHide(item.id);
-                                    handleUncollect(item.id);
                                 }
                                 if (direction === 'right') { handleUncollect(item.id); }
                             }}
@@ -223,17 +224,21 @@ export default function CollectedScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
+     container: {
         flex: 1,
         backgroundColor: 'white',
-        marginTop: 20
+    },
+    inner: {
+        flex: 1,
     },
     title: {
         fontSize: 24,
         fontWeight: '600',
+        marginTop: 20,
         marginBottom: 16,
         textAlign: 'center',
         color: 'black',
+        fontFamily: 'ShortStack_400Regular',
     },
     messageBox: {
         borderWidth: 1,
@@ -248,6 +253,7 @@ const styles = StyleSheet.create({
     messageText: {
         fontSize: 16,
         marginBottom: 4,
+        fontFamily: 'ShortStack_400Regular',
     },
     meta: {
         fontSize: 12,
@@ -276,15 +282,18 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 10,
+        fontFamily: 'ShortStack_400Regular',
     },
     modalText: {
         fontSize: 16,
         marginBottom: 10,
+        fontFamily: 'ShortStack_400Regular',
     },
     modalMeta: {
         fontSize: 14,
         color: 'gray',
         marginBottom: 20,
+        fontFamily: 'ShortStack_400Regular',
     },
     modalCloseIcon: {
         position: 'absolute',
@@ -301,6 +310,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
         textAlign: 'center',
+        fontFamily: 'ShortStack_400Regular',
     },
     uncollectButton: {
         backgroundColor: '#007AFF',
@@ -312,6 +322,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: '600',
         fontSize: 16,
+        fontFamily: 'ShortStack_400Regular',
     },
     swipeAction: {
         justifyContent: 'center',
@@ -323,6 +334,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
+        fontFamily: 'ShortStack_400Regular',
     },
     contactRow: {
         flexDirection: 'row',
@@ -342,11 +354,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 12,
     },
-    avatarInitial: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 18,
-    },
     contactInfo: {
         flex: 1,
     },
@@ -354,10 +361,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#000',
+        fontFamily: 'ShortStack_400Regular',
     },
     contactEmail: {
         fontSize: 14,
         color: '#666',
+        fontFamily: 'ShortStack_400Regular',
     },
     avatar: {
         width: 40,

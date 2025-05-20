@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/useAuth';
+import TopNavBar from '@/components/TopNavBar';
 
 export default function ProfileScreen() {
   const { user, logout, isAuthLoading } = useAuth();
@@ -23,7 +24,8 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>👤 Profile</Text>
+      <TopNavBar />
+      <Text style={styles.header}>Profile</Text>
 
       <View style={styles.infoBox}>
         <Text style={styles.label}>User ID:</Text>
@@ -44,13 +46,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    padding: 24,
   },
   header: {
     fontSize: 28,
     fontWeight: 'bold',
+    marginTop: 20,
     marginBottom: 24,
     color: 'black',
+    fontFamily: 'ShortStack_400Regular',
   },
   infoBox: {
     marginBottom: 40,
@@ -59,16 +62,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'gray',
     marginBottom: 4,
+    fontFamily: 'ShortStack_400Regular',
   },
   value: {
-    fontSize: 18,
+    fontSize: 16,
     marginBottom: 16,
     color: 'black',
+    fontFamily: 'ShortStack_400Regular',
   },
   loading: {
     fontSize: 16,
     color: 'gray',
     marginBottom: 20,
+    fontFamily: 'ShortStack_400Regular',
   },
   logoutButton: {
     backgroundColor: '#FF3B30',
@@ -80,5 +86,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ShortStack_400Regular',
   },
 });

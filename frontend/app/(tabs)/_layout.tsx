@@ -8,9 +8,8 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { TabHistoryProvider } from '@/context/TabHistoryContext';
+import { TabHistoryProvider, useTabHistory } from '@/context/TabHistoryContext';
 import { useRouter, useSegments } from 'expo-router';
-import { useTabHistory } from '@/context/TabHistoryContext';
 
 export default function ProtectedTabsLayout() {
   const [authStatus, setAuthStatus] = useState<'checking' | 'unauthenticated' | 'authenticated'>('checking');

@@ -19,7 +19,9 @@ import { useRouter } from 'expo-router';
 import { dropMessage } from '@/api/messages';
 import { useTabHistory } from '@/context/TabHistoryContext';
 import Toast from 'react-native-toast-message';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import TopNavBar from '@/components/TopNavBar';
+
 
 export default function HomeScreen() {
   const [message, setMessage] = useState('');
@@ -68,29 +70,30 @@ export default function HomeScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
       >
-        <View style={styles.container}>
-          {/* ❌ X Close Button */}
-          <TouchableOpacity onPress={() => router.push({ pathname: (lastTab || '/index') as any })} style={styles.closeButton}>
-            <Text style={styles.closeText}>✕</Text>
-          </TouchableOpacity>
+          <TopNavBar />
+          <View style={styles.inner}>
+            <Text style={styles.title}>Drop a Message</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Type your message..."
+              placeholderTextColor="#999" 
+              value={message}
+              onChangeText={setMessage}
+            />
+            <TouchableOpacity style={styles.customButton} onPress={handleDropMessage}>
+              <Text style={styles.buttonText}>Drop Message</Text>
+            </TouchableOpacity>
+       
 
-          <Text style={styles.title}>Drop a Geo-Message</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Type your message..."
-            value={message}
-            onChangeText={setMessage}
-          />
-          <TouchableOpacity style={styles.customButton} onPress={handleDropMessage}>
-            <Text style={styles.buttonText}>Drop Message</Text>
-          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 }
@@ -98,9 +101,12 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
+  },
+  inner: {
+    flex: 1,
     paddingHorizontal: 20,
     justifyContent: 'center',
-    backgroundColor: 'white',
   },
   closeButton: {
     position: 'absolute',
@@ -127,6 +133,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
     color: 'black',
+    fontFamily: 'ShortStack_400Regular',
   },
   input: {
     borderColor: '#ccc',
@@ -135,9 +142,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 8,
     backgroundColor: '#f9f9f9',
+    fontFamily: 'ShortStack_400Regular',
   },
   customButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: 'black',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -148,5 +156,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ShortStack_400Regular',
   },
 });

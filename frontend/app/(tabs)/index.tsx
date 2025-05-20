@@ -21,6 +21,8 @@ import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { authFetch } from '@/api/authFetch';
 import Toast from 'react-native-toast-message';
 import { avatarMap } from '@/utils/avatarMap';
+import TopNavBar from '@/components/TopNavBar';
+
 
 const REFRESH_INTERVAL_MS = 30000;
 
@@ -204,8 +206,9 @@ export default function NearbyScreen() {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: 'white' }}>
-            <View style={[styles.topHalf, { marginTop: -insets.top }]}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }} edges={['top', 'bottom']}>
+            <TopNavBar />
+            <View style={[styles.topHalf]}>
                 {region ? (
                     <MapView
                         provider={PROVIDER_GOOGLE}
@@ -310,7 +313,7 @@ export default function NearbyScreen() {
                     </TouchableOpacity>
                 </Modal>
             )}
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -323,12 +326,12 @@ const styles = StyleSheet.create({
         height: 64,
         width: '100%',
     },
-    messageText: { fontSize: 16, marginBottom: 4 },
-    meta: { fontSize: 12, color: 'gray' },
+    messageText: { fontSize: 16, marginBottom: 4, fontFamily: 'ShortStack_400Regular', },
+    meta: { fontSize: 12, color: 'gray', fontFamily: 'ShortStack_400Regular', },
     empty: { textAlign: 'center', marginTop: 40, fontSize: 16, color: 'gray' },
     topHalf: { flex: 1, backgroundColor: 'white' },
     bottomHalf: { flex: 1, backgroundColor: 'white', paddingBottom: 20 },
-    mapView: { flex: 1, width: '100%', height: '100%' },
+    mapView: { flex: 1, width: '100%', height: '100%', borderRadius: 16, overflow: 'hidden' },
     mapLoading: { justifyContent: 'center', alignItems: 'center' },
     modalOverlay: {
         flex: 1,
@@ -343,9 +346,9 @@ const styles = StyleSheet.create({
         padding: 20,
         alignItems: 'center',
     },
-    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
-    modalText: { fontSize: 16, marginBottom: 10 },
-    modalMeta: { fontSize: 14, color: 'gray', marginBottom: 20 },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, fontFamily: 'ShortStack_400Regular', },
+    modalText: { fontSize: 16, marginBottom: 10, fontFamily: 'ShortStack_400Regular', },
+    modalMeta: { fontSize: 14, color: 'gray', marginBottom: 20, fontFamily: 'ShortStack_400Regular', },
     modalCloseIcon: {
         position: 'absolute',
         top: 10,
@@ -361,6 +364,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
         textAlign: 'center',
+        fontFamily: 'ShortStack_400Regular',
     },
     collectButton: {
         backgroundColor: '#007AFF',
@@ -368,7 +372,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 8,
     },
-    collectButtonText: { color: 'white', fontWeight: '600', fontSize: 16 },
+    collectButtonText: { color: 'white', fontWeight: '600', fontSize: 16, fontFamily: 'ShortStack_400Regular' },
     hideButton: {
         backgroundColor: '#FF3B30',
         paddingVertical: 10,
@@ -381,6 +385,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
         textAlign: 'center',
+        fontFamily: 'ShortStack_400Regular',
     },
     fullSwipeAction: {
         justifyContent: 'center',
@@ -392,6 +397,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
+        fontFamily: 'ShortStack_400Regular',
     },
     contactRow: {
         flexDirection: 'row',
@@ -411,11 +417,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 12,
     },
-    avatarInitial: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 18,
-    },
     contactInfo: {
         flex: 1,
     },
@@ -423,10 +424,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#000',
+        fontFamily: 'ShortStack_400Regular',
     },
     contactEmail: {
         fontSize: 14,
         color: '#666',
+        fontFamily: 'ShortStack_400Regular',
     },
     avatar: {
         width: 40,

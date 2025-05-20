@@ -187,7 +187,7 @@ def hide_message(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
 ):
-    # Check if already hidden
+    # Hide the message if not already hidden
     exists = db.query(HiddenMessage).filter_by(
         user_id=current_user.id,
         message_id=message_id
@@ -200,7 +200,17 @@ def hide_message(
             hidden_at=datetime.utcnow()
         )
         db.add(hidden_message)
-        db.commit()
+
+    # Uncollect the message if it's collected
+    collected = db.query(CollectedMessage).filter_by(
+        user_id=current_user.id,
+        message_id=message_id
+    ).first()
+
+    if collected:
+        db.delete(collected)
+
+    db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

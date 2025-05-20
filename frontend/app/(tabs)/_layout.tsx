@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Tabs, Redirect } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { Platform, TouchableOpacity, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  Platform,
+  TouchableOpacity,
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -10,10 +17,17 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { TabHistoryProvider, useTabHistory } from '@/context/TabHistoryContext';
 import { useRouter, useSegments } from 'expo-router';
+import { useFonts, ShortStack_400Regular } from '@expo-google-fonts/short-stack';
 
 export default function ProtectedTabsLayout() {
-  const [authStatus, setAuthStatus] = useState<'checking' | 'unauthenticated' | 'authenticated'>('checking');
+  const [authStatus, setAuthStatus] = useState<'checking' | 'unauthenticated' | 'authenticated'>(
+    'checking'
+  );
   const colorScheme = useColorScheme();
+
+  const [fontsLoaded] = useFonts({
+    ShortStack_400Regular,
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -23,7 +37,7 @@ export default function ProtectedTabsLayout() {
     checkAuth();
   }, []);
 
-  if (authStatus === 'checking') {
+  if (!fontsLoaded || authStatus === 'checking') {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" />
@@ -43,6 +57,10 @@ export default function ProtectedTabsLayout() {
           headerShown: false,
           tabBarButton: HapticTab,
           tabBarBackground: TabBarBackground,
+          tabBarLabelStyle: {
+            fontFamily: 'ShortStack_400Regular',
+            fontSize: 12,
+          },
           tabBarStyle: Platform.select({
             ios: {
               position: 'absolute',
@@ -110,9 +128,8 @@ function DropMessageButton({ onPress, accessibilityState }: any) {
   return (
     <TouchableOpacity
       onPress={() => {
-        // Join segments into path (e.g., ['profile'] → '/profile')
         const currentPath = '/' + segments.join('/');
-        setLastTab(currentPath); // ✅ store previous tab path
+        setLastTab(currentPath);
         router.push('/drop');
       }}
       style={styles.dropButtonWrapper}

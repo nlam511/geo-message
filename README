@@ -45,6 +45,8 @@ TODOS:
 TOP PRIORITY
 -- the Nearby Page is still really buggy.  Got to fix this
 -- Index the location column?
+-- fix modal screen.
+-- make list elements display, username and message
 
 Test push notification stuff on multiple devices
 Prevent DDOS on backend

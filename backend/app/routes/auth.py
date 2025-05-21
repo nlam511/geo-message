@@ -17,20 +17,27 @@ DEFAULT_AVATARS = [f"avatar{i}.jpeg" for i in range(1, 4)]  # avatar1 to avatar4
 
 @router.post("/register")
 def register_user(payload: UserCreate, db: Session = Depends(get_db)):
-    # Check to see if User Already Exists
-    existing_user = db.query(User).filter(User.email == payload.email).first()
-    if existing_user:
+    # Check if email already exists
+    if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
 
+    # Check if username already exists
+    if db.query(User).filter(User.username == payload.username).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+
     # Add new user to DB
     new_user = User(
         id=uuid.uuid4(),
+        username=payload.username,
         email=payload.email,
         hashed_password=hash_password(payload.password),
-        profile_picture = random.choice(DEFAULT_AVATARS)
+        profile_picture=random.choice(DEFAULT_AVATARS)
     )
     db.add(new_user)
     db.commit()
@@ -38,6 +45,7 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
 
     return {
         "id": str(new_user.id),
+        "username": new_user.username,
         "email": new_user.email,
         "message": "User registered successfully"
     }
@@ -45,11 +53,11 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == payload.email).first()
+    user = db.query(User).filter(User.username == payload.username).first()
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            detail="Invalid username or password"
         )
 
     # Generate an access token
@@ -65,6 +73,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         "refresh_token": refresh_token,
         "token_type": "bearer",
         "user_id": str(user.id),
+        "username": user.username,
         "email": user.email
     }
 

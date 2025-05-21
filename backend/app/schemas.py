@@ -6,11 +6,12 @@ class MessageInput(BaseModel):
     longitude: float 
 
 class UserCreate(BaseModel):
+    username: str
     email: EmailStr
     password: str
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    username: str
     password: str
 
 class RefreshRequest(BaseModel):

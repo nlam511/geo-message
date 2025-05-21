@@ -116,7 +116,7 @@ export default function CollectedScreen() {
         });
 
         return (
-            <Animated.View style={[styles.swipeAction, { backgroundColor: '#FF3B30', opacity }]}>
+            <Animated.View style={[styles.swipeAction, { backgroundColor: 'black', opacity }]}>
                 <Text style={styles.swipeText}>Hide</Text>
             </Animated.View>
         );
@@ -133,7 +133,7 @@ export default function CollectedScreen() {
         });
 
         return (
-            <Animated.View style={[styles.swipeAction, { backgroundColor: '#007AFF', opacity }]}>
+            <Animated.View style={[styles.swipeAction, { backgroundColor: 'black', opacity }]}>
                 <Text style={styles.swipeText}>Uncollect</Text>
             </Animated.View>
         );
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     },
     swipeText: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
         fontFamily: 'ShortStack_400Regular',
     },
@@ -344,15 +344,6 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
         backgroundColor: 'white',
-    },
-    avatarPlaceholder: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#ccc',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
     },
     contactInfo: {
         flex: 1,

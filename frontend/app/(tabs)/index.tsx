@@ -182,7 +182,7 @@ export default function NearbyScreen() {
         });
 
         return (
-            <Animated.View style={[styles.fullSwipeAction, { backgroundColor: '#FF3B30', opacity }]}>
+            <Animated.View style={[styles.fullSwipeAction, { backgroundColor: 'black', opacity }]}>
                 <Text style={styles.swipeText}>Hide</Text>
             </Animated.View>
         );
@@ -199,7 +199,7 @@ export default function NearbyScreen() {
         });
 
         return (
-            <Animated.View style={[styles.fullSwipeAction, { backgroundColor: '#007AFF', opacity }]}>
+            <Animated.View style={[styles.fullSwipeAction, { backgroundColor: 'black', opacity }]}>
                 <Text style={styles.swipeText}>Collect</Text>
             </Animated.View>
         );
@@ -261,9 +261,7 @@ export default function NearbyScreen() {
                                     />
                                     <View style={styles.contactInfo}>
                                         <Text style={styles.contactName}>{item.text}</Text>
-                                        <Text style={styles.contactEmail}>
-                                            📍 Lat: {item.latitude}, Lng: {item.longitude}
-                                        </Text>
+                                        <Text style={styles.contactEmail}>{item.text} </Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>
@@ -395,7 +393,7 @@ const styles = StyleSheet.create({
     },
     swipeText: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
         fontFamily: 'ShortStack_400Regular',
     },

@@ -8,10 +8,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
   ScrollView,
   Image,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
@@ -21,8 +21,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { registerPushNotificationsAsync } from '@/utils/registerPushNotificationsAsync';
 import { Ionicons } from '@expo/vector-icons';
 
-
 export default function RegisterScreen() {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +30,7 @@ export default function RegisterScreen() {
   const { refresh } = useAuth();
 
   const handleRegister = async () => {
-    if (!email || !confirmEmail || !password) {
+    if (!username || !email || !confirmEmail || !password) {
       Alert.alert('Please fill out all fields');
       return;
     }
@@ -42,7 +42,12 @@ export default function RegisterScreen() {
     }
 
     if (email !== confirmEmail) {
-      Alert.alert('Emails don\'t match.  Please try again.');
+      Alert.alert("Emails don't match. Please try again.");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Password must be at least 6 characters');
       return;
     }
 
@@ -53,10 +58,15 @@ export default function RegisterScreen() {
       const registerRes = await fetch(`${backendUrl}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, email, password }),
       });
 
-      const registerData = await registerRes.json();
+      let registerData;
+      try {
+        registerData = await registerRes.json();
+      } catch {
+        throw new Error('Invalid response from server');
+      }
 
       if (!registerRes.ok) {
         Alert.alert('❌ Registration failed', registerData.detail || 'Unknown error');
@@ -69,11 +79,15 @@ export default function RegisterScreen() {
       const loginRes = await fetch(`${backendUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
-
-      const loginData = await loginRes.json();
+      let loginData;
+      try {
+        loginData = await loginRes.json();
+      } catch {
+        throw new Error('Invalid response from login');
+      }
 
       if (!loginRes.ok) {
         Alert.alert('✅ Registered, but login failed', loginData.detail || 'Unknown error');
@@ -90,7 +104,12 @@ export default function RegisterScreen() {
       }
 
       // Register device for push notifications
-      await registerPushNotificationsAsync();
+      try {
+        const pushToken = await registerPushNotificationsAsync();
+        console.log('📱 Push token:', pushToken);
+      } catch (err) {
+        console.warn('⚠️ Failed to register for push notifications', err);
+      }
 
       await refresh();
 
@@ -116,32 +135,60 @@ export default function RegisterScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity onPress={router.back} style={{ paddingTop: 50 }}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <View style={styles.logocontainer}>
-
-          <Image
-            source={require('@/assets/images/fishy@3x-80.jpg')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Droppings</Text>
-        </View>
-        <View style={styles.form}>
-          <Text style={styles.formLabel}>Register</Text>
-          <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#999" value={email}
-            onChangeText={setEmail} />
-          <TextInput style={styles.input} placeholder="Confirm Email" placeholderTextColor="#999" value={confirmEmail}
-            onChangeText={setConfirmEmail} />
-          <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#999" secureTextEntry value={password}
-            onChangeText={setPassword} />
-          <TouchableOpacity style={styles.button} onPress={handleRegister}>
-            <Text style={styles.buttonText}>Sign In</Text>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity onPress={router.back} style={{ paddingTop: 50 }}>
+            <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
-        </View>
-      </ScrollView>
+          <View style={styles.logocontainer}>
+            <Image
+              source={require('@/assets/images/fishy@3x-80.jpg')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>Droppings</Text>
+          </View>
+          <View style={styles.form}>
+            <Text style={styles.formLabel}>Register</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Username"
+              placeholderTextColor="#999"
+              value={username}
+              onChangeText={setUsername}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#999"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Email"
+              placeholderTextColor="#999"
+              value={confirmEmail}
+              onChangeText={setConfirmEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#999"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity style={styles.button} onPress={handleRegister}>
+              <Text style={styles.buttonText}>Register</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }
@@ -156,11 +203,10 @@ const styles = StyleSheet.create({
   logo: {
     width: 150,
     height: 150,
-    marginTop: 10
+    marginTop: 10,
   },
   logocontainer: {
     alignItems: 'center',
-    backgroundColor: '',
     marginBottom: 30,
   },
   title: {

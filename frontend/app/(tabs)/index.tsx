@@ -22,8 +22,11 @@ import { authFetch } from '@/api/authFetch';
 import Toast from 'react-native-toast-message';
 import { avatarMap } from '@/utils/avatarMap';
 import TopNavBar from '@/components/TopNavBar';
-import type { Animated as AnimatedType } from 'react-native';
-import type { Animated as RNAnimated } from 'react-native';
+import MessageItem from '@/components/MessageItem';
+import { InteractionManager } from 'react-native';
+
+// import type { Animated as AnimatedType } from 'react-native';
+// import type { Animated as RNAnimated } from 'react-native';
 
 
 const REFRESH_INTERVAL_MS = 30000;
@@ -90,8 +93,13 @@ export default function NearbyScreen() {
             const result = await collectMessage(id);
             if (result.status === 'success') {
                 await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                setMessages((prev) => prev.filter((msg) => msg.id !== id));
-                setSelectedMessage(null);
+
+                // ✅ Wait until all animations/gestures are done
+                InteractionManager.runAfterInteractions(() => {
+                    setMessages((prev) => prev.filter((msg) => msg.id !== id));
+                    setSelectedMessage(null);
+                });
+
                 Toast.show({
                     type: 'success',
                     text1: 'Message Collected!',
@@ -125,8 +133,12 @@ export default function NearbyScreen() {
             const result = await hideMessage(id);
             if (result.status === 'success') {
                 await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                setMessages((prev) => prev.filter((msg) => msg.id !== id));
-                setSelectedMessage(null);
+
+                InteractionManager.runAfterInteractions(() => {
+                    setMessages((prev) => prev.filter((msg) => msg.id !== id));
+                    setSelectedMessage(null);
+                });
+
                 Toast.show({
                     type: 'success',
                     text1: 'Message Hidden!',
@@ -180,14 +192,14 @@ export default function NearbyScreen() {
             outputRange: [0, 1],
             extrapolate: 'clamp',
         });
-    
+
         return (
             <Animated.View style={[styles.fullSwipeAction, { backgroundColor: 'black', opacity }]}>
                 <Text style={styles.swipeText}>Hide</Text>
             </Animated.View>
         );
     };
-    
+
     const renderRightActions = (
         _progress: Animated.AnimatedInterpolation<number>,
         dragX: Animated.AnimatedInterpolation<number>
@@ -197,15 +209,15 @@ export default function NearbyScreen() {
             outputRange: [1, 0],
             extrapolate: 'clamp',
         });
-    
+
         return (
             <Animated.View style={[styles.fullSwipeAction, { backgroundColor: 'black', opacity }]}>
                 <Text style={styles.swipeText}>Collect</Text>
             </Animated.View>
         );
     };
-    
-    
+
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }} edges={['top', 'bottom']}>
@@ -239,40 +251,21 @@ export default function NearbyScreen() {
             </View>
 
             <SafeAreaView style={styles.bottomHalf} edges={['bottom']}>
+
                 <FlatList
                     data={messages}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => {
-                        const swipeableRef = useRef<Swipeable>(null);
-
-                        return (
-                            <Swipeable
-                                ref={swipeableRef}
-                                renderLeftActions={renderLeftActions}
-                                renderRightActions={renderRightActions}
-                                onSwipeableWillOpen={() => setIsSwiping(true)}
-                                onSwipeableClose={() => setIsSwiping(false)}
-                                onSwipeableOpen={async (direction) => {
-                                    swipeableRef.current?.close(); // Critical line that avoids crash
-                                    if (direction === 'left') await handleHide(item.id);
-                                    if (direction === 'right') await handleCollect(item.id);
-                                  }}
-                            >
-                                <TouchableOpacity onPress={() => setSelectedMessage(item)}>
-                                    <View style={styles.contactRow}>
-                                        <Image
-                                            source={avatarMap[item.owner_profile_picture ?? 'avatar1.jpeg']}
-                                            style={styles.avatar}
-                                        />
-                                        <View style={styles.contactInfo}>
-                                            <Text style={styles.contactName}>{item.owner_username}</Text>
-                                            <Text style={styles.contactEmail}>{item.text}</Text>
-                                        </View>
-                                    </View>
-                                </TouchableOpacity>
-                            </Swipeable>
-                        );
-                    }}
+                    renderItem={({ item }) => (
+                        <MessageItem
+                        item={item}
+                        isSelected={selectedMessage?.id === item.id}
+                        onPress={() => setSelectedMessage(item)}
+                        onSwipeableOpen={setIsSwiping}
+                        onCollectOrUncollect={handleCollect}
+                        onHide={handleHide}
+                        rightLabel="Collect"
+                      />
+                    )}
                     ListEmptyComponent={<Text style={styles.empty}>No messages nearby.</Text>}
                     refreshing={refreshing}
                     onRefresh={handleManualRefresh}

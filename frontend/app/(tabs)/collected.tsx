@@ -1,235 +1,177 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-    View,
-    Text,
-    FlatList,
-    StyleSheet,
-    Alert,
-    TouchableOpacity,
-    Modal,
-    Animated,
-    Image,
+  View,
+  Text,
+  FlatList,
+  Alert,
+  TouchableOpacity,
+  Modal,
+  Image,
+  StyleSheet,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Swipeable } from 'react-native-gesture-handler';
-import { uncollectMessage, hideMessage } from '@/api/messages';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 import { authFetch } from '@/api/authFetch';
+import { hideMessage, uncollectMessage } from '@/api/messages';
 import { avatarMap } from '@/utils/avatarMap';
 import TopNavBar from '@/components/TopNavBar';
-
+import MessageItem from '@/components/MessageItem';
 
 function formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-    });
+  const date = new Date(dateStr);
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
 }
 
 export default function CollectedScreen() {
-    const [messages, setMessages] = useState<any[]>([]);
-    const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
-    const [refreshing, setRefreshing] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const insets = useSafeAreaInsets();
 
-    const insets = useSafeAreaInsets();
+  const fetchCollectedMessages = useCallback(async () => {
+    try {
+      if (selectedMessage) return;
+      const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+      const response = await authFetch(`${backendUrl}/message/collected`);
+      const data = await response.json();
+      setMessages(data);
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Could not load collected messages.');
+    }
+  }, [selectedMessage]);
 
-    const fetchCollectedMessages = useCallback(async () => {
-        try {
-            if (selectedMessage) return;
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    await fetchCollectedMessages();
+    setRefreshing(false);
+    Toast.show({
+      type: 'success',
+      text1: 'Message Refreshed!',
+      visibilityTime: 1500,
+      topOffset: insets.top,
+    });
+  };
 
-            const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-            const response = await authFetch(`${backendUrl}/message/collected`);
-            const data = await response.json();
-            setMessages(data);
-            console.log('✅ Refreshed collected messages');
-        } catch (err) {
-            console.error(err);
-            Alert.alert('Error', 'Could not load collected messages.');
-        }
-    }, [selectedMessage]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchCollectedMessages();
+    }, [fetchCollectedMessages])
+  );
 
-    const handleManualRefresh = async () => {
-        setRefreshing(true);
-        await fetchCollectedMessages();
-        setRefreshing(false);
-        Toast.show({
-            type: 'success',
-            text1: 'Message Refreshed!',
-            visibilityTime: 1500,
-            topOffset: insets.top,
-        });
-    };
+  const handleHide = async (id: string) => {
+    const result = await hideMessage(id);
+    if (result.status === 'success') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setMessages((prev) => prev.filter((msg) => msg.id !== id));
+      setSelectedMessage(null);
+      Toast.show({
+        type: 'success',
+        text1: 'Message Hidden!',
+        visibilityTime: 1500,
+        topOffset: insets.top,
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to Hide Message!',
+        visibilityTime: 1500,
+        topOffset: insets.top,
+      });
+    }
+  };
 
-    useFocusEffect(
-        useCallback(() => {
-            fetchCollectedMessages();
-        }, [fetchCollectedMessages])
-    );
+  const handleUncollect = async (id: string) => {
+    const result = await uncollectMessage(id);
+    if (result.status === 'success') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setMessages((prev) => prev.filter((msg) => msg.id !== id));
+      setSelectedMessage(null);
+      Toast.show({
+        type: 'success',
+        text1: 'Message Uncollected!',
+        visibilityTime: 1500,
+        topOffset: insets.top,
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to Uncollect Message',
+        visibilityTime: 1500,
+        topOffset: insets.top,
+      });
+    }
+  };
 
-    const handleHide = async (id: string) => {
-        const result = await hideMessage(id);
-        if (result.status === "success") {
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            setSelectedMessage(null);
-            Toast.show({
-                type: 'success',
-                text1: 'Message Hidden!',
-                visibilityTime: 1500,
-                topOffset: insets.top,
-            });
-        } else {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to Hide Message!',
-                visibilityTime: 1500,
-                topOffset: insets.top,
-            });
-        }
-    };
+  return (
+    <SafeAreaView style={styles.container}>
+      <TopNavBar />
+      <View style={styles.inner}>
+        <Text style={styles.title}>Collected Messages</Text>
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <MessageItem
+              item={item}
+              isSelected={selectedMessage?.id === item.id}
+              onPress={() => setSelectedMessage(item)}
+              onSwipeableOpen={() => {}}
+              onHide={handleHide}
+              onCollectOrUncollect={handleUncollect}
+              rightLabel="Uncollect"
+            />
+          )}
+          ListEmptyComponent={<Text style={styles.empty}>No messages collected yet.</Text>}
+          refreshing={refreshing}
+          onRefresh={handleManualRefresh}
+        />
+      </View>
 
-
-    const handleUncollect = async (id: string) => {
-        const result = await uncollectMessage(id);
-        if (result.status === 'success') {
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            setMessages((prev) => prev.filter((msg) => msg.id !== id));
-            Toast.show({
-                type: 'success',
-                text1: ' Message Uncollected!',
-                visibilityTime: 1500,
-                topOffset: insets.top,
-            });
-        } else {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to Uncollect Message',
-                visibilityTime: 1500,
-                topOffset: insets.top,
-            });
-        }
-    };
-
-    const renderLeftActions = (
-        _progress: Animated.AnimatedInterpolation<number>,
-        dragX: Animated.AnimatedInterpolation<number>
-    ) => {
-        const opacity = dragX.interpolate({
-            inputRange: [0, 64],
-            outputRange: [0, 1],
-            extrapolate: 'clamp',
-        });
-
-        return (
-            <Animated.View style={[styles.swipeAction, { backgroundColor: 'black', opacity }]}>
-                <Text style={styles.swipeText}>Hide</Text>
-            </Animated.View>
-        );
-    };
-
-    const renderRightActions = (
-        _progress: Animated.AnimatedInterpolation<number>,
-        dragX: Animated.AnimatedInterpolation<number>
-    ) => {
-        const opacity = dragX.interpolate({
-            inputRange: [-64, 0],
-            outputRange: [1, 0],
-            extrapolate: 'clamp',
-        });
-
-        return (
-            <Animated.View style={[styles.swipeAction, { backgroundColor: 'black', opacity }]}>
-                <Text style={styles.swipeText}>Uncollect</Text>
-            </Animated.View>
-        );
-    };
-
-    return (
-        <SafeAreaView style={styles.container}>
-            <TopNavBar />
-            <View style={styles.inner}>
-                <Text style={styles.title}>Collected Messages</Text>
-                <FlatList
-                    data={messages}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <Swipeable
-                            renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX)}
-                            renderRightActions={(progress, dragX) => renderRightActions(progress, dragX)}
-                            onSwipeableOpen={(direction) => {
-                                if (direction === 'left') {
-                                    handleHide(item.id);
-                                }
-                                if (direction === 'right') { handleUncollect(item.id); }
-                            }}
-                        >
-                            <TouchableOpacity onPress={() => setSelectedMessage(item)}>
-                                <View style={styles.contactRow}>
-                                    <Image
-                                        source={avatarMap[item.owner_profile_picture ?? 'avatar1.jpeg']}
-                                        style={styles.avatar}
-                                    />
-                                    <View style={styles.contactInfo}>
-                                        <Text style={styles.contactName}>{item.owner_username}</Text>
-                                        <Text style={styles.contactEmail}>{item.text} </Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        </Swipeable>
-                    )}
-                    ListEmptyComponent={<Text style={styles.empty}>No messages collected yet.</Text>}
-                    refreshing={refreshing}
-                    onRefresh={handleManualRefresh}
-                />
+      {selectedMessage && (
+        <Modal visible animationType="fade" transparent onRequestClose={() => setSelectedMessage(null)}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPressOut={() => setSelectedMessage(null)}
+          >
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Message Details</Text>
+              <Image
+                source={avatarMap[selectedMessage.owner_profile_picture ?? 'avatar1.jpeg']}
+                style={styles.modalAvatar}
+              />
+              <Text style={styles.modalUsername}>{selectedMessage.owner_username}</Text>
+              <Text style={styles.modalDate}>Date Dropped: {formatDate(selectedMessage.created_at)}</Text>
+              <Text style={styles.modalDate}>Date Collected: {formatDate(selectedMessage.collected_at)}</Text>
+              <Text style={styles.modalMessageText}>{selectedMessage.text}</Text>
+              <TouchableOpacity
+                style={styles.modalUncollectButton}
+                onPress={() => handleUncollect(selectedMessage.id)}
+              >
+                <Text style={styles.modalCollectButtonText}>Uncollect</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalHideButton}
+                onPress={() => handleHide(selectedMessage.id)}
+              >
+                <Text style={styles.modalHideButtonText}>Hide</Text>
+              </TouchableOpacity>
             </View>
-
-            {selectedMessage && (
-                <Modal visible={true} animationType="fade" transparent onRequestClose={() => setSelectedMessage(null)}>
-                    <TouchableOpacity
-                        style={styles.modalOverlay}
-                        activeOpacity={1}
-                        onPressOut={() => setSelectedMessage(null)}
-                    >
-                        <View style={styles.modalContent}>
-
-                            <Text style={styles.modalTitle}>Message Details</Text>
-
-                            <Image
-                                source={avatarMap[selectedMessage.owner_profile_picture ?? 'avatar1.jpeg']}
-                                style={styles.modalAvatar}
-                            />
-
-                            <Text style={styles.modalUsername}>{selectedMessage.owner_username}</Text>
-                            <Text style={styles.modalDate}>Date Dropped: {formatDate(selectedMessage.created_at)}</Text>
-                            <Text style={styles.modalDate}>Date Collected: {formatDate(selectedMessage.collected_at)}</Text>
-
-                            <Text style={styles.modalMessageText}>{selectedMessage.text}</Text>
-
-                            <TouchableOpacity
-                                style={styles.modalUncollectButton}
-                                onPress={() => handleUncollect(selectedMessage.id)}
-                            >
-                                <Text style={styles.modalCollectButtonText}>Uncollect</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.modalHideButton}
-                                onPress={() => handleHide(selectedMessage.id)}
-                            >
-                                <Text style={styles.modalHideButtonText}>Hide</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
-                </Modal>
-            )}
-        </SafeAreaView>
-    );
+          </TouchableOpacity>
+        </Modal>
+      )}
+    </SafeAreaView>
+  );
 }
+
 
 const styles = StyleSheet.create({
     container: {

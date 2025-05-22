@@ -43,7 +43,6 @@ python -m app.db
 TODOS:
 
 TOP PRIORITY
--- the Nearby Page is still really buggy.  Got to fix this
 -- Index the location column?
 -- Refresh tokens not working
 -- Display Actual errors to the user that is understandable

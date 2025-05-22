@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  View,
-  Text,
-  FlatList,
-  Alert,
-  TouchableOpacity,
-  Modal,
-  Image,
-  StyleSheet,
+    View,
+    Text,
+    FlatList,
+    Alert,
+    TouchableOpacity,
+    Modal,
+    Image,
+    StyleSheet,
 } from 'react-native';
 import Constants from 'expo-constants';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,155 +21,168 @@ import TopNavBar from '@/components/TopNavBar';
 import MessageItem from '@/components/MessageItem';
 
 function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
+    const date = new Date(dateStr);
+    return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
 }
 
 export default function CollectedScreen() {
-  const [messages, setMessages] = useState<any[]>([]);
-  const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const insets = useSafeAreaInsets();
+    const [messages, setMessages] = useState<any[]>([]);
+    const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
+    const insets = useSafeAreaInsets();
 
-  const fetchCollectedMessages = useCallback(async () => {
-    try {
-      if (selectedMessage) return;
-      const backendUrl = Constants.expoConfig?.extra?.backendUrl;
-      const response = await authFetch(`${backendUrl}/message/collected`);
-      const data = await response.json();
-      setMessages(data);
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Could not load collected messages.');
-    }
-  }, [selectedMessage]);
+    const fetchCollectedMessages = useCallback(async () => {
+        try {
+            if (selectedMessage) return;
+            const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+            const response = await authFetch(`${backendUrl}/message/collected`);
+            const data = await response.json();
+            setMessages(data);
+        } catch (err) {
+            console.error(err);
+            Alert.alert('Error', 'Could not load collected messages.');
+        }
+    }, [selectedMessage]);
 
-  const handleManualRefresh = async () => {
-    setRefreshing(true);
-    await fetchCollectedMessages();
-    setRefreshing(false);
-    Toast.show({
-      type: 'success',
-      text1: 'Message Refreshed!',
-      visibilityTime: 1500,
-      topOffset: insets.top,
-    });
-  };
+    const handleManualRefresh = async () => {
+        setRefreshing(true);
+        await fetchCollectedMessages();
+        setRefreshing(false);
+        
+        Toast.show({
+            type: 'success',
+            text1: 'Message Refreshed!',
+            visibilityTime: 1500,
+            topOffset: insets.top,
+        });
+    };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchCollectedMessages();
-    }, [fetchCollectedMessages])
-  );
+    useFocusEffect(
+        useCallback(() => {
+            fetchCollectedMessages();
+        }, [fetchCollectedMessages])
+    );
 
-  const handleHide = async (id: string) => {
-    const result = await hideMessage(id);
-    if (result.status === 'success') {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setMessages((prev) => prev.filter((msg) => msg.id !== id));
-      setSelectedMessage(null);
-      Toast.show({
-        type: 'success',
-        text1: 'Message Hidden!',
-        visibilityTime: 1500,
-        topOffset: insets.top,
-      });
-    } else {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to Hide Message!',
-        visibilityTime: 1500,
-        topOffset: insets.top,
-      });
-    }
-  };
+    const handleHide = async (id: string) => {
+        // use auth fetch?
+        const result = await hideMessage(id);
+        if (result.status === 'success') {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            setMessages((prev) => prev.filter((msg) => msg.id !== id));
+            setSelectedMessage(null);
+            
+            Toast.show({
+                type: 'success',
+                text1: 'Message Hidden!',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
+        } else {
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to Hide Message!',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
+        }
+    };
 
-  const handleUncollect = async (id: string) => {
-    const result = await uncollectMessage(id);
-    if (result.status === 'success') {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setMessages((prev) => prev.filter((msg) => msg.id !== id));
-      setSelectedMessage(null);
-      Toast.show({
-        type: 'success',
-        text1: 'Message Uncollected!',
-        visibilityTime: 1500,
-        topOffset: insets.top,
-      });
-    } else {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to Uncollect Message',
-        visibilityTime: 1500,
-        topOffset: insets.top,
-      });
-    }
-  };
+    const handleUncollect = async (id: string) => {
+        // use auth fetch?
+        const result = await uncollectMessage(id);
+        if (result.status === 'success') {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            setMessages((prev) => prev.filter((msg) => msg.id !== id));
+            setSelectedMessage(null);
+            
+            Toast.show({
+                type: 'success',
+                text1: 'Message Uncollected!',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
+        } else {
+            
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to Uncollect Message',
+                visibilityTime: 1500,
+                topOffset: insets.top,
+            });
+        }
+    };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <TopNavBar />
-      <View style={styles.inner}>
-        <Text style={styles.title}>Collected Messages</Text>
-        <FlatList
-          data={messages}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <MessageItem
-              item={item}
-              isSelected={selectedMessage?.id === item.id}
-              onPress={() => setSelectedMessage(item)}
-              onSwipeableOpen={() => {}}
-              onHide={handleHide}
-              onCollectOrUncollect={handleUncollect}
-              rightLabel="Uncollect"
-            />
-          )}
-          ListEmptyComponent={<Text style={styles.empty}>No messages collected yet.</Text>}
-          refreshing={refreshing}
-          onRefresh={handleManualRefresh}
-        />
-      </View>
+    // Auto-dismiss modal if selected message no longer exists
+    useEffect(() => {
+        if (selectedMessage && !messages.some((m) => m.id === selectedMessage.id)) {
+            setSelectedMessage(null);
+        }
+    }, [messages, selectedMessage]);
 
-      {selectedMessage && (
-        <Modal visible animationType="fade" transparent onRequestClose={() => setSelectedMessage(null)}>
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPressOut={() => setSelectedMessage(null)}
-          >
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Message Details</Text>
-              <Image
-                source={avatarMap[selectedMessage.owner_profile_picture ?? 'avatar1.jpeg']}
-                style={styles.modalAvatar}
-              />
-              <Text style={styles.modalUsername}>{selectedMessage.owner_username}</Text>
-              <Text style={styles.modalDate}>Date Dropped: {formatDate(selectedMessage.created_at)}</Text>
-              <Text style={styles.modalDate}>Date Collected: {formatDate(selectedMessage.collected_at)}</Text>
-              <Text style={styles.modalMessageText}>{selectedMessage.text}</Text>
-              <TouchableOpacity
-                style={styles.modalUncollectButton}
-                onPress={() => handleUncollect(selectedMessage.id)}
-              >
-                <Text style={styles.modalCollectButtonText}>Uncollect</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalHideButton}
-                onPress={() => handleHide(selectedMessage.id)}
-              >
-                <Text style={styles.modalHideButtonText}>Hide</Text>
-              </TouchableOpacity>
+    return (
+        <SafeAreaView style={styles.container}>
+            <TopNavBar />
+            <View style={styles.inner}>
+                <Text style={styles.title}>Collected Messages</Text>
+                <FlatList
+                    data={messages}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <MessageItem
+                            item={item}
+                            isSelected={selectedMessage?.id === item.id}
+                            onPress={() => setSelectedMessage(item)}
+                            onSwipeableOpen={() => { }}
+                            onHide={handleHide}
+                            onCollectOrUncollect={handleUncollect}
+                            rightLabel="Uncollect"
+                        />
+                    )}
+                    ListEmptyComponent={<Text style={styles.empty}>No messages collected yet.</Text>}
+                    refreshing={refreshing}
+                    onRefresh={handleManualRefresh}
+                />
             </View>
-          </TouchableOpacity>
-        </Modal>
-      )}
-    </SafeAreaView>
-  );
+
+            {selectedMessage && messages.some((m) => m.id === selectedMessage.id) && (
+                <Modal visible animationType="fade" transparent onRequestClose={() => setSelectedMessage(null)}>
+                    <TouchableOpacity
+                        style={styles.modalOverlay}
+                        activeOpacity={1}
+                        onPressOut={() => setSelectedMessage(null)}
+                    >
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Message Details</Text>
+                            <Image
+                                source={avatarMap[selectedMessage.owner_profile_picture ?? 'avatar1.jpeg']}
+                                style={styles.modalAvatar}
+                            />
+                            <Text style={styles.modalUsername}>{selectedMessage.owner_username}</Text>
+                            <Text style={styles.modalDate}>Date Dropped: {formatDate(selectedMessage.created_at)}</Text>
+                            <Text style={styles.modalDate}>Date Collected: {formatDate(selectedMessage.collected_at)}</Text>
+                            <Text style={styles.modalMessageText}>{selectedMessage.text}</Text>
+                            <TouchableOpacity
+                                style={styles.modalUncollectButton}
+                                onPress={() => handleUncollect(selectedMessage.id)}
+                            >
+                                <Text style={styles.modalCollectButtonText}>Uncollect</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.modalHideButton}
+                                onPress={() => handleHide(selectedMessage.id)}
+                            >
+                                <Text style={styles.modalHideButtonText}>Hide</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
+            )}
+        </SafeAreaView>
+    );
 }
 
 
@@ -287,7 +300,7 @@ const styles = StyleSheet.create({
     modalMessageText: {
         textAlign: 'left',
         alignSelf: 'stretch',
-        fontSize: 16, 
+        fontSize: 16,
         color: 'black',
         fontFamily: 'ShortStack_400Regular',
         marginHorizontal: 10,
@@ -300,7 +313,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         width: 200,
     },
-    modalCollectButtonText: { color: 'white', fontWeight: '600', fontSize: 16, fontFamily: 'ShortStack_400Regular',     textAlign: 'center', },
+    modalCollectButtonText: { color: 'white', fontWeight: '600', fontSize: 16, fontFamily: 'ShortStack_400Regular', textAlign: 'center', },
     modalHideButton: {
         backgroundColor: 'black',
         paddingVertical: 10,

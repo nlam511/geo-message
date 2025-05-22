@@ -80,7 +80,7 @@ export default function ProtectedTabsLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Main',
+            title: 'Nearby',
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="map.fill" color={color} />,
           }}
         />
@@ -89,7 +89,7 @@ export default function ProtectedTabsLayout() {
           name="drop"
           options={{
             title: 'Drop Message',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus" color="white" />,
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus" color="white"  />,
             tabBarButton: (props) => <DropMessageButton {...props} />,
           }}
         />
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 30,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#3A9CA5',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

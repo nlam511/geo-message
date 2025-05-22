@@ -2,71 +2,91 @@ import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
 
-
 /**
- * A wrapper around the native fetch API that handles authenticated requests.
- * 
- * Features:
- * - Automatically adds the access token (from SecureStore) to the Authorization header.
- * - If the access token is expired (i.e., a 401 Unauthorized response is received),
- *   it attempts to refresh the access token using the stored refresh token.
- * - If the refresh succeeds, it retries the original request with the new access token.
- * - If the refresh fails (e.g., refresh token is expired or invalid), it clears both tokens
- *   from SecureStore and redirects the user to the login screen.
- * 
- * Usage:
- * Replace standard `fetch` calls with `authFetch` for any authenticated API endpoints.
- * 
- * @param url - The full URL of the API endpoint.
- * @param options - Optional fetch options (method, headers, body, etc.).
- * @returns A fetch Response object.
- * @throws An error if the session has expired and refresh fails.
+ * Makes authenticated API requests and handles token refresh on 401 errors.
+ * Includes detailed logs for success, failure, and retry behavior.
  */
 export async function authFetch(url: string, options: RequestInit = {}) {
-    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+  const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+  let accessToken = await SecureStore.getItemAsync('user_token');
+  let refreshToken = await SecureStore.getItemAsync('refresh_token');
 
-    let accessToken = await SecureStore.getItemAsync('user_token');
+  console.log(`[authFetch] 🔄 Initial request to ${url}`);
 
-    let res = await fetch(url, {
-        ...options,
-        headers: {
-            ...(options.headers || {}),
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-        },
-    });
+  // Initial request with access token
+  let res = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
-    if (res.status === 401) {
-        // Access token expired – try refresh
-        const refreshToken = await SecureStore.getItemAsync('refresh_token');
-        // TODO here
-        const refreshRes = await fetch('{backendUrl}/auth/refresh', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: refreshToken }),
-        });
-
-        if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            await SecureStore.setItemAsync('token', data.access_token);
-
-            // Retry original request
-            res = await fetch(url, {
-                ...options,
-                headers: {
-                    ...(options.headers || {}),
-                    Authorization: `Bearer ${data.access_token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-        } else {
-            // Refresh failed → force logout
-            await SecureStore.deleteItemAsync('user_token');
-            await SecureStore.deleteItemAsync('refresh_token');
-            router.replace('/(auth)/login');
-            throw new Error('Session expired. Please log in again.');
-        }
+  if (res.status !== 401) {
+    if (res.ok) {
+      console.log(`[authFetch] ✅ Request succeeded with status ${res.status}`);
+    } else {
+      console.warn(`[authFetch] ⚠️ Request failed with status ${res.status}`);
     }
-
     return res;
+  }
+
+  // Access token expired or invalid
+  console.warn(`[authFetch] ⚠️ Access token expired (401). Attempting to refresh token.`);
+
+  if (!refreshToken) {
+    console.error(`[authFetch] ❌ No refresh token found. Logging out.`);
+    await SecureStore.deleteItemAsync('user_token');
+    await SecureStore.deleteItemAsync('refresh_token');
+    router.replace('/(auth)/login');
+    throw new Error('Session expired. Please log in again.');
+  }
+
+  const refreshRes = await fetch(`${backendUrl}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: refreshToken }),
+  });
+
+  if (!refreshRes.ok) {
+    console.error(`[authFetch] ❌ Refresh token request failed. Status: ${refreshRes.status}`);
+    await SecureStore.deleteItemAsync('user_token');
+    await SecureStore.deleteItemAsync('refresh_token');
+    router.replace('/(auth)/login');
+    throw new Error('Session expired. Please log in again.');
+  }
+
+  const data = await refreshRes.json();
+  const newAccessToken = data.access_token;
+
+  console.log(`[authFetch] 🔁 Token refreshed. Retrying original request.`);
+
+  await SecureStore.setItemAsync('user_token', newAccessToken);
+
+  // Retry original request with new access token
+  res = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${newAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (res.status === 401) {
+    console.error(`[authFetch] ❌ Retried request still returned 401. Logging out.`);
+    await SecureStore.deleteItemAsync('user_token');
+    await SecureStore.deleteItemAsync('refresh_token');
+    router.replace('/(auth)/login');
+    throw new Error('Session expired after retry. Please log in again.');
+  }
+
+  if (res.ok) {
+    console.log(`[authFetch] ✅ Retried request succeeded with status ${res.status}`);
+  } else {
+    console.warn(`[authFetch] ⚠️ Retried request failed with status ${res.status}`);
+  }
+
+  return res;
 }

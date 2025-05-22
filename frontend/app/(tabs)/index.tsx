@@ -225,6 +225,7 @@ export default function NearbyScreen() {
             <View style={styles.topHalf}>
                 {region ? (
                     <MapView
+                        key={messages.map((m) => m.id).join(',')}
                         provider={PROVIDER_GOOGLE}
                         style={styles.mapView}
                         region={region}
@@ -257,14 +258,14 @@ export default function NearbyScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
                         <MessageItem
-                        item={item}
-                        isSelected={selectedMessage?.id === item.id}
-                        onPress={() => setSelectedMessage(item)}
-                        onSwipeableOpen={setIsSwiping}
-                        onCollectOrUncollect={handleCollect}
-                        onHide={handleHide}
-                        rightLabel="Collect"
-                      />
+                            item={item}
+                            isSelected={selectedMessage?.id === item.id}
+                            onPress={() => setSelectedMessage(item)}
+                            onSwipeableOpen={setIsSwiping}
+                            onCollectOrUncollect={handleCollect}
+                            onHide={handleHide}
+                            rightLabel="Collect"
+                        />
                     )}
                     ListEmptyComponent={<Text style={styles.empty}>No messages nearby.</Text>}
                     refreshing={refreshing}
@@ -272,7 +273,7 @@ export default function NearbyScreen() {
                 />
             </SafeAreaView>
 
-            {selectedMessage && (
+            {selectedMessage && messages.some((m) => m.id === selectedMessage.id) && (
                 <Modal visible={true} animationType="fade" transparent onRequestClose={() => setSelectedMessage(null)}>
                     <TouchableOpacity
                         style={styles.modalOverlay}

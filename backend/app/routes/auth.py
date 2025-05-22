@@ -110,7 +110,7 @@ def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
 
     # Return new access token
-    access_token = create_access_token(user)
+    access_token = create_access_token(data={"sub": str(user.id)})
 
     return {"access_token": access_token}
 

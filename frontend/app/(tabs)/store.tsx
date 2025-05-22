@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TopNavBar from '@/components/TopNavBar';
 
@@ -7,10 +7,11 @@ export default function StoreScreen() {
     <SafeAreaView style={styles.container}>
       <TopNavBar />
       <View style={styles.inner}>
-        <Text style={styles.title}>🛒 Store</Text>
-        <Text style={styles.subtitle}>
-          In-app purchases will be available here soon.
-        </Text>
+        <Text style={styles.header}>Store</Text>
+
+        <TouchableOpacity style={styles.moneyButton} onPress={() => Alert.alert("Coming Soon", "In-app purchases coming soon!")}>
+          <Text style={styles.buttonText}>Secret Button</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -22,22 +23,35 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   inner: {
+    paddingHorizontal: 20,
     flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  title: {
+  header: {
     fontSize: 28,
+    textAlign: 'center',
     fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#000',
+    marginTop: 20,
+    marginBottom: 24,
+    color: 'black',
     fontFamily: 'ShortStack_400Regular',
   },
-  subtitle: {
+  value: {
     fontSize: 16,
-    color: 'gray',
-    textAlign: 'center',
+    marginBottom: 16,
+    color: 'black',
+    fontFamily: 'ShortStack_400Regular',
+  },
+  moneyButton: {
+    backgroundColor: 'black',
+    marginHorizontal: 40,
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
     fontFamily: 'ShortStack_400Regular',
   },
 });

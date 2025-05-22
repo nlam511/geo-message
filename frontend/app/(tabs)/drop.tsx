@@ -13,55 +13,73 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
-import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { dropMessage } from '@/api/messages';
 import { useTabHistory } from '@/context/TabHistoryContext';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import TopNavBar from '@/components/TopNavBar';
-
+import { authFetch } from '@/api/authFetch';
 
 export default function HomeScreen() {
   const [message, setMessage] = useState('');
   const router = useRouter();
   const { lastTab } = useTabHistory();
-
   const insets = useSafeAreaInsets();
 
   const handleDropMessage = async () => {
-    const token = await SecureStore.getItemAsync("user_token");
-    if (!token) {
-      Alert.alert("❌ You must be logged in to drop a message.");
-      return;
-    }
-
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission denied', 'We need location permission to drop a message.');
       return;
     }
 
+    if (message.trim().length === 0) {
+      Alert.alert('Message too short', 'Please enter a message before submitting.');
+      return;
+    }
+
     const curr_location = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = curr_location.coords;
 
-    const dropResult = await dropMessage(message, { latitude, longitude });
-    if (dropResult.status === "success") {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setMessage('');
-      Keyboard.dismiss();
-      Toast.show({
-        type: 'success',
-        text1: ' Message Dropped!',
-        visibilityTime: 1500,
-        topOffset: insets.top,
+    try {
+      const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+      const res = await authFetch(`${backendUrl}/message/drop`, {
+        method: 'POST',
+        body: JSON.stringify({
+          text: message,
+          latitude,
+          longitude,
+        }),
       });
-      router.push({ pathname: (lastTab || '/index') as any })
-    } else {
+
+      if (res.ok) {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        setMessage('');
+        Keyboard.dismiss();
+        Toast.show({
+          type: 'success',
+          text1: ' Message Dropped!',
+          visibilityTime: 1500,
+          topOffset: insets.top,
+        });
+        router.push({ pathname: (lastTab || '/index') as any });
+      } else {
+        const error = await res.json();
+        Toast.show({
+          type: 'error',
+          text1: ' Failed to Drop Message',
+          text2: error?.detail || '',
+          visibilityTime: 1500,
+          topOffset: insets.top,
+        });
+      }
+    } catch (err) {
+      console.error('[Drop] Network error:', err);
       Toast.show({
         type: 'error',
-        text1: ' Failed to Drop Message',
+        text1: ' Network Error',
+        text2: 'Could not connect to server.',
         visibilityTime: 1500,
         topOffset: insets.top,
       });
@@ -71,28 +89,35 @@ export default function HomeScreen() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
-      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+        >
           <TopNavBar />
           <View style={styles.inner}>
             <Text style={styles.title}>Drop a Message</Text>
             <TextInput
               style={styles.input}
               placeholder="Type your message..."
-              placeholderTextColor="#999" 
+              placeholderTextColor="#999"
               value={message}
-              onChangeText={setMessage}
+              onChangeText={(text) => {
+                if (text.length <= 100) setMessage(text);
+              }}
+              multiline
+              maxLength={100}
             />
-            <TouchableOpacity style={styles.customButton} onPress={handleDropMessage}>
+            <Text style={styles.charCount}>{`${message.length}/100`}</Text>
+            <TouchableOpacity
+              style={[styles.customButton, { opacity: message.trim() ? 1 : 0.5 }]}
+              onPress={handleDropMessage}
+              disabled={!message.trim()}
+            >
               <Text style={styles.buttonText}>Drop Message</Text>
             </TouchableOpacity>
-       
-
-        </View>
-      </KeyboardAvoidingView>
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );
@@ -156,6 +181,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ShortStack_400Regular',
+  },
+  charCount: {
+    textAlign: 'right',
+    marginBottom: 10,
+    color: '#666',
+    fontSize: 12,
     fontFamily: 'ShortStack_400Regular',
   },
 });

@@ -26,6 +26,17 @@ import TopNavBar from '@/components/TopNavBar';
 
 const REFRESH_INTERVAL_MS = 30000;
 
+
+function formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+}
+
+
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
@@ -281,31 +292,31 @@ export default function NearbyScreen() {
                         onPressOut={() => setSelectedMessage(null)}
                     >
                         <View style={styles.modalContent}>
-                            <TouchableOpacity
-                                style={styles.modalCloseIcon}
-                                onPress={() => setSelectedMessage(null)}
-                            >
-                                <Text style={styles.modalCloseText}>✕</Text>
-                            </TouchableOpacity>
 
                             <Text style={styles.modalTitle}>Message Details</Text>
-                            <Text style={styles.modalText}>{String(selectedMessage.text)}</Text>
-                            <Text style={styles.modalMeta}>
-                                📍 Lat: {selectedMessage.latitude}, Lng: {selectedMessage.longitude}
-                            </Text>
+
+                            <Image
+                                source={avatarMap[selectedMessage.owner_profile_picture ?? 'avatar1.jpeg']}
+                                style={styles.modalAvatar}
+                            />
+
+                            <Text style={styles.modalUsername}>{selectedMessage.owner_username}</Text>
+                            <Text style={styles.modalDate}>Date Dropped: {formatDate(selectedMessage.created_at)}</Text>
+
+                            <Text style={styles.modalMessageText}>{selectedMessage.text}</Text>
 
                             <TouchableOpacity
-                                style={styles.collectButton}
+                                style={styles.modalCollectButton}
                                 onPress={() => handleCollect(selectedMessage.id)}
                             >
-                                <Text style={styles.collectButtonText}>Collect</Text>
+                                <Text style={styles.modalCollectButtonText}>Collect</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={styles.hideButton}
+                                style={styles.modalHideButton}
                                 onPress={() => handleHide(selectedMessage.id)}
                             >
-                                <Text style={styles.hideButtonText}>Hide</Text>
+                                <Text style={styles.modalHideButtonText}>Hide</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableOpacity>
@@ -325,7 +336,6 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     messageText: { fontSize: 16, marginBottom: 4, fontFamily: 'ShortStack_400Regular', },
-    meta: { fontSize: 12, color: 'gray', fontFamily: 'ShortStack_400Regular', },
     empty: { textAlign: 'center', marginTop: 40, fontSize: 16, color: 'gray' },
     topHalf: { flex: 1, backgroundColor: 'white' },
     bottomHalf: { flex: 1, backgroundColor: 'white', paddingBottom: 20 },
@@ -344,41 +354,44 @@ const styles = StyleSheet.create({
         padding: 20,
         alignItems: 'center',
     },
-    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, fontFamily: 'ShortStack_400Regular', },
-    modalText: { fontSize: 16, marginBottom: 10, fontFamily: 'ShortStack_400Regular', },
-    modalMeta: { fontSize: 14, color: 'gray', marginBottom: 20, fontFamily: 'ShortStack_400Regular', },
-    modalCloseIcon: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        zIndex: 10,
-        backgroundColor: '#ff3b30',
-        borderRadius: 12,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
+    modalTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: 14, fontFamily: 'ShortStack_400Regular', },
+    modalAvatar: {
+        width: 120,
+        height: 120,
+        borderRadius: 120,
+        marginBottom: 10,
+        backgroundColor: '#ccc',
     },
-    modalCloseText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
+    modalUsername: { fontSize: 24, marginBottom: 10, fontFamily: 'ShortStack_400Regular', },
+    modalDate: {
+        fontSize: 13,
+        color: '#555',
         fontFamily: 'ShortStack_400Regular',
     },
-    collectButton: {
-        backgroundColor: '#007AFF',
+    modalMessageText: {
+        textAlign: 'left',
+        alignSelf: 'stretch',
+        fontSize: 16, 
+        color: 'black',
+        fontFamily: 'ShortStack_400Regular',
+        marginHorizontal: 10,
+        marginVertical: 20,
+    },
+    modalCollectButton: {
+        backgroundColor: 'black',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,
     },
-    collectButtonText: { color: 'white', fontWeight: '600', fontSize: 16, fontFamily: 'ShortStack_400Regular' },
-    hideButton: {
-        backgroundColor: '#FF3B30',
+    modalCollectButtonText: { color: 'white', fontWeight: '600', fontSize: 16, fontFamily: 'ShortStack_400Regular' },
+    modalHideButton: {
+        backgroundColor: 'black',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,
         marginTop: 10,
     },
-    hideButtonText: {
+    modalHideButtonText: {
         color: 'white',
         fontSize: 16,
         fontWeight: '500',

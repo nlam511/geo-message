@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
     View,
@@ -22,10 +22,11 @@ import { authFetch } from '@/api/authFetch';
 import Toast from 'react-native-toast-message';
 import { avatarMap } from '@/utils/avatarMap';
 import TopNavBar from '@/components/TopNavBar';
+import type { Animated as AnimatedType } from 'react-native';
+import type { Animated as RNAnimated } from 'react-native';
 
 
 const REFRESH_INTERVAL_MS = 30000;
-
 
 function formatDate(dateStr: string): string {
     const date = new Date(dateStr);
@@ -36,36 +37,29 @@ function formatDate(dateStr: string): string {
     });
 }
 
-
 export default function NearbyScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
     const [isSwiping, setIsSwiping] = useState(false);
     const [region, setRegion] = useState<Region | null>(null);
     const [refreshing, setRefreshing] = useState(false);
-
     const insets = useSafeAreaInsets();
 
     const refreshMessages = useCallback(async () => {
         try {
             const { status } = await Location.requestForegroundPermissionsAsync();
-
             if (status !== 'granted') {
                 Alert.alert('Location Required', 'Please enable location to see nearby messages.');
                 return;
             }
-
             const location = await Location.getCurrentPositionAsync({});
             const backendUrl = Constants.expoConfig?.extra?.backendUrl;
             const response = await authFetch(
                 `${backendUrl}/message/nearby?latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`
             );
-
             if (!response.ok) throw new Error('Failed to fetch nearby messages');
-
             const data = await response.json();
             setMessages(data);
-
             setRegion({
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
@@ -96,7 +90,7 @@ export default function NearbyScreen() {
             const result = await collectMessage(id);
             if (result.status === 'success') {
                 await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                await refreshMessages();
+                setMessages((prev) => prev.filter((msg) => msg.id !== id));
                 setSelectedMessage(null);
                 Toast.show({
                     type: 'success',
@@ -160,21 +154,16 @@ export default function NearbyScreen() {
         }
     };
 
-    // Constantly refresh messages
     useFocusEffect(
         useCallback(() => {
-            console.log('📍 Routed to Nearby Page');
             let isActive = true;
-
             const poll = async () => {
                 if (!selectedMessage && !isSwiping && isActive) {
                     await refreshMessages();
                 }
             };
-
             const intervalId = setInterval(poll, REFRESH_INTERVAL_MS);
-            poll(); // trigger one immediately
-
+            poll();
             return () => {
                 isActive = false;
                 clearInterval(intervalId);
@@ -191,14 +180,14 @@ export default function NearbyScreen() {
             outputRange: [0, 1],
             extrapolate: 'clamp',
         });
-
+    
         return (
             <Animated.View style={[styles.fullSwipeAction, { backgroundColor: 'black', opacity }]}>
                 <Text style={styles.swipeText}>Hide</Text>
             </Animated.View>
         );
     };
-
+    
     const renderRightActions = (
         _progress: Animated.AnimatedInterpolation<number>,
         dragX: Animated.AnimatedInterpolation<number>
@@ -208,18 +197,20 @@ export default function NearbyScreen() {
             outputRange: [1, 0],
             extrapolate: 'clamp',
         });
-
+    
         return (
             <Animated.View style={[styles.fullSwipeAction, { backgroundColor: 'black', opacity }]}>
                 <Text style={styles.swipeText}>Collect</Text>
             </Animated.View>
         );
     };
+    
+    
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }} edges={['top', 'bottom']}>
             <TopNavBar />
-            <View style={[styles.topHalf]}>
+            <View style={styles.topHalf}>
                 {region ? (
                     <MapView
                         provider={PROVIDER_GOOGLE}
@@ -251,33 +242,37 @@ export default function NearbyScreen() {
                 <FlatList
                     data={messages}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <Swipeable
-                            renderLeftActions={renderLeftActions}
-                            renderRightActions={renderRightActions}
-                            onSwipeableWillOpen={() => setIsSwiping(true)}
-                            onSwipeableClose={() => setIsSwiping(false)}
-                            onSwipeableOpen={(direction) => {
-                                setTimeout(() => {
-                                    if (direction === 'left') handleHide(item.id);
-                                    if (direction === 'right') handleCollect(item.id);
-                                }, 200);
-                            }}
-                        >
-                            <TouchableOpacity onPress={() => setSelectedMessage(item)}>
-                                <View style={styles.contactRow}>
-                                    <Image
-                                        source={avatarMap[item.owner_profile_picture ?? 'avatar1.jpeg']}
-                                        style={styles.avatar}
-                                    />
-                                    <View style={styles.contactInfo}>
-                                        <Text style={styles.contactName}>{item.owner_username}</Text>
-                                        <Text style={styles.contactEmail}>{item.text} </Text>
+                    renderItem={({ item }) => {
+                        const swipeableRef = useRef<Swipeable>(null);
+
+                        return (
+                            <Swipeable
+                                ref={swipeableRef}
+                                renderLeftActions={renderLeftActions}
+                                renderRightActions={renderRightActions}
+                                onSwipeableWillOpen={() => setIsSwiping(true)}
+                                onSwipeableClose={() => setIsSwiping(false)}
+                                onSwipeableOpen={async (direction) => {
+                                    swipeableRef.current?.close(); // Critical line that avoids crash
+                                    if (direction === 'left') await handleHide(item.id);
+                                    if (direction === 'right') await handleCollect(item.id);
+                                  }}
+                            >
+                                <TouchableOpacity onPress={() => setSelectedMessage(item)}>
+                                    <View style={styles.contactRow}>
+                                        <Image
+                                            source={avatarMap[item.owner_profile_picture ?? 'avatar1.jpeg']}
+                                            style={styles.avatar}
+                                        />
+                                        <View style={styles.contactInfo}>
+                                            <Text style={styles.contactName}>{item.owner_username}</Text>
+                                            <Text style={styles.contactEmail}>{item.text}</Text>
+                                        </View>
                                     </View>
-                                </View>
-                            </TouchableOpacity>
-                        </Swipeable>
-                    )}
+                                </TouchableOpacity>
+                            </Swipeable>
+                        );
+                    }}
                     ListEmptyComponent={<Text style={styles.empty}>No messages nearby.</Text>}
                     refreshing={refreshing}
                     onRefresh={handleManualRefresh}
@@ -292,26 +287,20 @@ export default function NearbyScreen() {
                         onPressOut={() => setSelectedMessage(null)}
                     >
                         <View style={styles.modalContent}>
-
                             <Text style={styles.modalTitle}>Message Details</Text>
-
                             <Image
                                 source={avatarMap[selectedMessage.owner_profile_picture ?? 'avatar1.jpeg']}
                                 style={styles.modalAvatar}
                             />
-
                             <Text style={styles.modalUsername}>{selectedMessage.owner_username}</Text>
                             <Text style={styles.modalDate}>Date Dropped: {formatDate(selectedMessage.created_at)}</Text>
-
                             <Text style={styles.modalMessageText}>{selectedMessage.text}</Text>
-
                             <TouchableOpacity
                                 style={styles.modalCollectButton}
                                 onPress={() => handleCollect(selectedMessage.id)}
                             >
                                 <Text style={styles.modalCollectButtonText}>Collect</Text>
                             </TouchableOpacity>
-
                             <TouchableOpacity
                                 style={styles.modalHideButton}
                                 onPress={() => handleHide(selectedMessage.id)}
@@ -335,7 +324,7 @@ const styles = StyleSheet.create({
         height: 64,
         width: '100%',
     },
-    messageText: { fontSize: 16, marginBottom: 4, fontFamily: 'ShortStack_400Regular', },
+    messageText: { fontSize: 16, marginBottom: 4, fontFamily: 'ShortStack_400Regular' },
     empty: { textAlign: 'center', marginTop: 40, fontSize: 16, color: 'gray' },
     topHalf: { flex: 1, backgroundColor: 'white' },
     bottomHalf: { flex: 1, backgroundColor: 'white', paddingBottom: 20 },
@@ -354,7 +343,7 @@ const styles = StyleSheet.create({
         padding: 20,
         alignItems: 'center',
     },
-    modalTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: 14, fontFamily: 'ShortStack_400Regular', },
+    modalTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: 14, fontFamily: 'ShortStack_400Regular' },
     modalAvatar: {
         width: 120,
         height: 120,
@@ -362,16 +351,12 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         backgroundColor: '#ccc',
     },
-    modalUsername: { fontSize: 24, marginBottom: 10, fontFamily: 'ShortStack_400Regular', },
-    modalDate: {
-        fontSize: 13,
-        color: '#555',
-        fontFamily: 'ShortStack_400Regular',
-    },
+    modalUsername: { fontSize: 24, marginBottom: 10, fontFamily: 'ShortStack_400Regular' },
+    modalDate: { fontSize: 13, color: '#555', fontFamily: 'ShortStack_400Regular' },
     modalMessageText: {
         textAlign: 'left',
         alignSelf: 'stretch',
-        fontSize: 16, 
+        fontSize: 16,
         color: 'black',
         fontFamily: 'ShortStack_400Regular',
         marginHorizontal: 10,
@@ -384,14 +369,20 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         width: 200,
     },
-    modalCollectButtonText: { color: 'white', fontWeight: '600', fontSize: 16, fontFamily: 'ShortStack_400Regular',     textAlign: 'center', },
+    modalCollectButtonText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 16,
+        fontFamily: 'ShortStack_400Regular',
+        textAlign: 'center',
+    },
     modalHideButton: {
         backgroundColor: 'black',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,
         marginTop: 10,
-        width: 200
+        width: 200,
     },
     modalHideButtonText: {
         color: 'white',
@@ -421,14 +412,12 @@ const styles = StyleSheet.create({
         borderBottomColor: '#eee',
         backgroundColor: 'white',
     },
-    avatarPlaceholder: {
+    avatar: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#ccc',
-        justifyContent: 'center',
-        alignItems: 'center',
         marginRight: 12,
+        backgroundColor: '#ccc',
     },
     contactInfo: {
         flex: 1,
@@ -443,12 +432,5 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         fontFamily: 'ShortStack_400Regular',
-    },
-    avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginRight: 12,
-        backgroundColor: '#ccc',
     },
 });

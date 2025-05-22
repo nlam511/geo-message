@@ -382,14 +382,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,
+        width: 200,
     },
-    modalCollectButtonText: { color: 'white', fontWeight: '600', fontSize: 16, fontFamily: 'ShortStack_400Regular' },
+    modalCollectButtonText: { color: 'white', fontWeight: '600', fontSize: 16, fontFamily: 'ShortStack_400Regular',     textAlign: 'center', },
     modalHideButton: {
         backgroundColor: 'black',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,
         marginTop: 10,
+        width: 200
     },
     modalHideButtonText: {
         color: 'white',

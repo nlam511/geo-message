@@ -22,6 +22,16 @@ import { authFetch } from '@/api/authFetch';
 import { avatarMap } from '@/utils/avatarMap';
 import TopNavBar from '@/components/TopNavBar';
 
+
+function formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+}
+
 export default function CollectedScreen() {
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
@@ -179,39 +189,39 @@ export default function CollectedScreen() {
             </View>
 
             {selectedMessage && (
-                <Modal
-                    visible={true}
-                    animationType="fade"
-                    transparent
-                    onRequestClose={() => setSelectedMessage(null)}
-                >
+                <Modal visible={true} animationType="fade" transparent onRequestClose={() => setSelectedMessage(null)}>
                     <TouchableOpacity
                         style={styles.modalOverlay}
                         activeOpacity={1}
                         onPressOut={() => setSelectedMessage(null)}
                     >
                         <View style={styles.modalContent}>
-                            <TouchableOpacity
-                                style={styles.modalCloseIcon}
-                                onPress={() => setSelectedMessage(null)}
-                            >
-                                <Text style={styles.modalCloseText}>✕</Text>
-                            </TouchableOpacity>
 
                             <Text style={styles.modalTitle}>Message Details</Text>
-                            <Text style={styles.modalText}>{selectedMessage.text}</Text>
-                            <Text style={styles.modalMeta}>
-                                📍 Lat: {selectedMessage.latitude}, Lng: {selectedMessage.longitude}
-                            </Text>
+
+                            <Image
+                                source={avatarMap[selectedMessage.owner_profile_picture ?? 'avatar1.jpeg']}
+                                style={styles.modalAvatar}
+                            />
+
+                            <Text style={styles.modalUsername}>{selectedMessage.owner_username}</Text>
+                            <Text style={styles.modalDate}>Date Dropped: {formatDate(selectedMessage.created_at)}</Text>
+                            <Text style={styles.modalDate}>Date Collected: {formatDate(selectedMessage.collected_at)}</Text>
+
+                            <Text style={styles.modalMessageText}>{selectedMessage.text}</Text>
 
                             <TouchableOpacity
-                                style={styles.uncollectButton}
-                                onPress={async () => {
-                                    await handleUncollect(selectedMessage.id);
-                                    setSelectedMessage(null);
-                                }}
+                                style={styles.modalUncollectButton}
+                                onPress={() => handleUncollect(selectedMessage.id)}
                             >
-                                <Text style={styles.uncollectButtonText}>Uncollect</Text>
+                                <Text style={styles.modalCollectButtonText}>Uncollect</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.modalHideButton}
+                                onPress={() => handleHide(selectedMessage.id)}
+                            >
+                                <Text style={styles.modalHideButtonText}>Hide</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableOpacity>
@@ -263,65 +273,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'gray',
     },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContent: {
-        width: '85%',
-        backgroundColor: 'white',
-        borderRadius: 12,
-        padding: 20,
-        alignItems: 'center',
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        fontFamily: 'ShortStack_400Regular',
-    },
-    modalText: {
-        fontSize: 16,
-        marginBottom: 10,
-        fontFamily: 'ShortStack_400Regular',
-    },
-    modalMeta: {
-        fontSize: 14,
-        color: 'gray',
-        marginBottom: 20,
-        fontFamily: 'ShortStack_400Regular',
-    },
-    modalCloseIcon: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        zIndex: 10,
-        backgroundColor: '#ff3b30',
-        borderRadius: 12,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-    },
-    modalCloseText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        fontFamily: 'ShortStack_400Regular',
-    },
-    uncollectButton: {
-        backgroundColor: '#007AFF',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 8,
-    },
-    uncollectButtonText: {
-        color: 'white',
-        fontWeight: '600',
-        fontSize: 16,
-        fontFamily: 'ShortStack_400Regular',
-    },
     swipeAction: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -363,5 +314,64 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         marginRight: 12,
         backgroundColor: '#ccc',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '85%',
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 20,
+        alignItems: 'center',
+    },
+    modalTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: 14, fontFamily: 'ShortStack_400Regular', },
+    modalAvatar: {
+        width: 120,
+        height: 120,
+        borderRadius: 120,
+        marginBottom: 10,
+        backgroundColor: '#ccc',
+    },
+    modalUsername: { fontSize: 24, marginBottom: 10, fontFamily: 'ShortStack_400Regular', },
+    modalDate: {
+        fontSize: 13,
+        color: '#555',
+        fontFamily: 'ShortStack_400Regular',
+    },
+    modalMessageText: {
+        textAlign: 'left',
+        alignSelf: 'stretch',
+        fontSize: 16, 
+        color: 'black',
+        fontFamily: 'ShortStack_400Regular',
+        marginHorizontal: 10,
+        marginVertical: 20,
+    },
+    modalUncollectButton: {
+        backgroundColor: 'black',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 8,
+        width: 200,
+    },
+    modalCollectButtonText: { color: 'white', fontWeight: '600', fontSize: 16, fontFamily: 'ShortStack_400Regular',     textAlign: 'center', },
+    modalHideButton: {
+        backgroundColor: 'black',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        marginTop: 10,
+        width: 200,
+    },
+    modalHideButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+        textAlign: 'center',
+        fontFamily: 'ShortStack_400Regular',
     },
 });

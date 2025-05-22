@@ -97,7 +97,7 @@ export async function uncollectMessage(message_id: string): Promise<APIResponse>
 
 export async function hideMessage(message_id: string): Promise<APIResponse> {
     try {
-        console.log(`[Hide] Attempting to uncollect message ${message_id}`);
+        console.log(`[Hide] Attempting to hide message ${message_id}`);
         const token = await SecureStore.getItemAsync("user_token");
         if (!token) {
             console.warn("[Hide] No token found – user not logged in.");
@@ -124,7 +124,7 @@ export async function hideMessage(message_id: string): Promise<APIResponse> {
             console.error("[Hide] Server error:", error);
             return {
                 status: "server_error",
-                message: error.detail || "[Uncollect] Failed to uncollect message.",
+                message: error.detail || "[Hide] Failed to hide message.",
             };
         }
     } catch (err) {

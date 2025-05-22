@@ -161,14 +161,12 @@ export default function CollectedScreen() {
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                                 <View style={styles.contactRow}>
                                     <Image
-                                        source={avatarMap[item.avatar ?? 'avatar1']}
+                                        source={avatarMap[item.owner_profile_picture ?? 'avatar1.jpeg']}
                                         style={styles.avatar}
                                     />
                                     <View style={styles.contactInfo}>
-                                        <Text style={styles.contactName}>{item.text}</Text>
-                                        <Text style={styles.contactEmail}>
-                                            📍 Lat: {item.latitude}, Lng: {item.longitude}
-                                        </Text>
+                                        <Text style={styles.contactName}>{item.owner_username}</Text>
+                                        <Text style={styles.contactEmail}>{item.text} </Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>
@@ -224,7 +222,7 @@ export default function CollectedScreen() {
 }
 
 const styles = StyleSheet.create({
-     container: {
+    container: {
         flex: 1,
         backgroundColor: 'white',
     },

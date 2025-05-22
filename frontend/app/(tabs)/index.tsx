@@ -256,7 +256,7 @@ export default function NearbyScreen() {
                             <TouchableOpacity onPress={() => setSelectedMessage(item)}>
                                 <View style={styles.contactRow}>
                                     <Image
-                                        source={avatarMap[item.owner_profile_picture ?? 'avatar1']}
+                                        source={avatarMap[item.owner_profile_picture ?? 'avatar1.jpeg']}
                                         style={styles.avatar}
                                     />
                                     <View style={styles.contactInfo}>

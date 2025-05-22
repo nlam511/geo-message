@@ -226,20 +226,19 @@ def get_collected_messages(
     # Join CollectedMessages with Messages + Filter and Sort
     collected_msgs = (
         db.query(CollectedMessage)
-        .join(Message)
+        .options(joinedload(CollectedMessage.message).joinedload(Message.owner))
         .filter(CollectedMessage.user_id == current_user.id)
         .order_by(desc(CollectedMessage.collected_at))
         .all()
     )
-
     # Convert all CollectedMessages to JSON
     collected_json_msgs = []
     for collected_msg in collected_msgs:
         collected_json_msgs.append({
             "id": collected_msg.message_id,
+            "owner_username": collected_msg.message.owner.username,
+            "owner_profile_picture": collected_msg.message.owner.profile_picture,
             "text": collected_msg.message.text,
-            "longitude": to_shape(collected_msg.message.location).x,
-            "latitude": to_shape(collected_msg.message.location).y,
             "created_at": collected_msg.message.created_at,
             "collected_at": collected_msg.collected_at,
         })

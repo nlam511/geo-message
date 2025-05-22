@@ -25,19 +25,21 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <TopNavBar />
-      <Text style={styles.header}>Profile</Text>
+      <View style={styles.inner}>
+        <Text style={styles.header}>Profile</Text>
 
-      <View style={styles.infoBox}>
-        <Text style={styles.label}>User ID:</Text>
-        <Text style={styles.value}>{user.id}</Text>
+        <View style={styles.infoBox}>
+          <Text style={styles.label}>User ID:</Text>
+          <Text style={styles.value}>{user.id}</Text>
 
-        <Text style={styles.label}>Email:</Text>
-        <Text style={styles.value}>{user.email}</Text>
+          <Text style={styles.label}>Email:</Text>
+          <Text style={styles.value}>{user.email}</Text>
+        </View>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -47,8 +49,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
+  inner: {
+    paddingHorizontal: 20,
+    flex: 1, 
+  },
   header: {
     fontSize: 28,
+    textAlign: 'center',
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 24,
@@ -77,7 +84,8 @@ const styles = StyleSheet.create({
     fontFamily: 'ShortStack_400Regular',
   },
   logoutButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: 'black',
+    marginHorizontal: 40,
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',

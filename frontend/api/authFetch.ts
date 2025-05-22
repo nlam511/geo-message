@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
+import Constants from 'expo-constants';
 
 
 /**
@@ -22,6 +23,8 @@ import { router } from 'expo-router';
  * @throws An error if the session has expired and refresh fails.
  */
 export async function authFetch(url: string, options: RequestInit = {}) {
+    const backendUrl = Constants.expoConfig?.extra?.backendUrl;
+
     let accessToken = await SecureStore.getItemAsync('user_token');
 
     let res = await fetch(url, {
@@ -36,7 +39,8 @@ export async function authFetch(url: string, options: RequestInit = {}) {
     if (res.status === 401) {
         // Access token expired – try refresh
         const refreshToken = await SecureStore.getItemAsync('refresh_token');
-        const refreshRes = await fetch('https://your-api.com/auth/refresh', {
+        // TODO here
+        const refreshRes = await fetch('{backendUrl}/auth/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: refreshToken }),

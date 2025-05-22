@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, Response, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc
 from app.db_session import get_db
 from app.models import Message, CollectedMessage, HiddenMessage, PushToken
@@ -80,6 +80,7 @@ def nearby_messages(
 
     nearby_msgs = (
         db.query(Message)
+        .options(joinedload(Message.owner))
         .filter(
             func.ST_DWithin(
                 Message.location,
@@ -100,7 +101,9 @@ def nearby_messages(
     for msg in nearby_msgs:
         nearby_msgs_json.append({
             "id": msg.id,
-            "user_id": msg.user_id,
+            "owner_user_id": msg.user_id,
+            "owner_username": msg.owner.username,
+            "owner_profile_picture": msg.owner.profile_picture,
             "text": msg.text,
             "longitude": to_shape(msg.location).x,
             "latitude": to_shape(msg.location).y,

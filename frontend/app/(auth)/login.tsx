@@ -19,20 +19,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const { refresh } = useAuth(); // ✅ this gives you the method to trigger context update  
   const router = useRouter();
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!username || !password) {
       Alert.alert('Please enter email and password');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Please enter a valid email address');
       return;
     }
 
@@ -41,7 +35,7 @@ export default function LoginScreen() {
       const response = await fetch(`${backendUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
@@ -89,8 +83,8 @@ export default function LoginScreen() {
         </View>
         <View style={styles.form}>
           <Text style={styles.formLabel}>Login</Text>
-          <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#999" value={email}
-            onChangeText={setEmail} />
+          <TextInput style={styles.input} placeholder="Username" placeholderTextColor="#999" value={username}
+            onChangeText={setUsername} />
           <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#999" secureTextEntry value={password}
             onChangeText={setPassword} />
           <TouchableOpacity style={styles.button} onPress={handleLogin}>

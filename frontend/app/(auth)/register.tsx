@@ -35,6 +35,12 @@ export default function RegisterScreen() {
       return;
     }
 
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!usernameRegex.test(username)) {
+      Alert.alert('Invalid username', 'Username can only contain letters, numbers, and underscores.');
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Please enter a valid email address');

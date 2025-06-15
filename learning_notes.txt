@@ -10,4 +10,4 @@
 - Tab, row of icons, to let users switch beteen sections of you apps
 - Modal Component - UI Component that shows content in a layer on top of the current screen
     - blocks interaction with the underlying UI until dismissed.
--test
+-tests
